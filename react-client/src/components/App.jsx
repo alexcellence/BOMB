@@ -3,6 +3,7 @@ import axios from 'axios';
 import Form from './Form.jsx';
 import Stream from './Stream.jsx';
 import ListItem from './ListItem.jsx';
+import moment from 'moment';
 // import Fuse from 'fuse.js';
 
 class App extends React.Component {
@@ -10,7 +11,7 @@ class App extends React.Component {
     super(props);
     this.state = {
       movies: [],
-      actors: [],
+      filmography: [],
       movieTurn: true,
       officialActor: '',
       searchTerm: '',
@@ -35,35 +36,59 @@ class App extends React.Component {
     event.preventDefault();
 
     let updatedMovies = [...this.state.movies];
-    let updatedActors = [...this.state.actors];
+    let updatedStream = [...this.state.stream];
+    // these are the options for fuse
+    const options = {
+      includeScore: true,
+      threshold: 0.3
+    };
 
     if (this.state.movieTurn) {
-      // submit a get request with the movie search
-      this.getTitle(this.state.searchTerm);
-      this.getCast(this.state.searchTerm);
+      if (this.state.movies.length > 0) {
+        const filmographyFuse = new Fuse(this.state.filmography, options);
+        const movieGuess = this.state.searchTerm;
+        let movieResults = filmographyFuse.search(movieGuess);
+        if (movieResults.length > 0) {
+          const foundMovie = movieResults[0].item;
+          updatedStream.push(foundMovie);
+          this.setState({
+            stream: updatedStream
+          })
+          this.getTitle(foundMovie);
+          this.getCast(foundMovie);
+        } else {
+          alert(`${this.state.officialActor} is not in ${this.state.searchTerm}!`);
+          updatedStream.push('BOMB!');
+          this.setState({
+            stream: updatedStream,
+            movies: []
+          })
+        }
+      } else {
+        // submit a get request with the movie search
+        this.getTitle(this.state.searchTerm);
+        this.getCast(this.state.searchTerm);
+      }
     } else {
       // time to submit an actor
-      // these are the options for fuse
-      const options = {
-        includeScore: true,
-        threshold: 0.3
-      };
-      const fuse = new Fuse(this.state.cast, options);
+      let fuse = new Fuse(this.state.cast, options);
       const searchedActor = this.state.searchTerm;
       let actorResults = fuse.search(searchedActor);
-      let updatedStream = [...this.state.stream];
       if (actorResults.length > 0) {
         let foundActor = fuse.search(this.state.searchTerm)[0].item;
         updatedStream.push(foundActor);
         this.setState({
           stream: updatedStream,
-          officialActor: foundActor
+          officialActor: foundActor,
+          movieTurn: !this.state.movieTurn
         })
-        this.getFilmography(this.state.officialActor);
+        this.getFilmography(foundActor);
       } else {
+        alert(`${this.state.searchTerm} is not in ${this.state.officialTitle}!`)
         updatedStream.push('BOMB!');
         this.setState({
-          stream: updatedStream
+          stream: updatedStream,
+          movies: []
         })
       }
     }
@@ -78,19 +103,41 @@ class App extends React.Component {
       data: this.state.searchTerm
     })
       .then((data) => {
+        const options = {
+          includeScore: true,
+          threshold: 0.3
+        };
         let updatedMovies = [...this.state.movies];
         let updatedStream = [...this.state.stream];
+
+        let movieTitle = searchTerm.toLowerCase();
+
+        const possibleTitles = data.data.results.map(movie => movie.title.toLowerCase());
         console.log(data.data.results);
-        let officialTitle = data.data.results[0].title;
-        updatedMovies.push(officialTitle);
+        console.log('possibleTitles ', possibleTitles);
+        console.log('movieTitle ', movieTitle)
+
+        let titleIndex = possibleTitles.indexOf(movieTitle);
+        console.log('titleIndex ', titleIndex);
+        let today = new Date();
+        console.log('today ', today);
+        console.log('moment ', moment().format('YYYY-MM-DD'));
+
+        if (titleIndex > -1 && titleIndex < 5) {
+          movieTitle = data.data.results[titleIndex].title;
+        } else {
+          movieTitle = data.data.results[0].title;
+        }
+        console.log('updated movie title ', movieTitle);
+        updatedMovies.push(movieTitle);
 
         // if the stream does not already have the search term, update the stream to include it
-        if (!this.state.stream.includes(officialTitle)) {
-          updatedStream.push(officialTitle);
+        if (!this.state.stream.includes(movieTitle)) {
+          updatedStream.push(movieTitle);
         }
 
         this.setState({
-          officialTitle: officialTitle,
+          // officialTitle: officialTitle,
           movies: updatedMovies,
           stream: updatedStream,
           // we only switch the turns if a valid movie title was returned
@@ -120,9 +167,14 @@ class App extends React.Component {
 
   getFilmography(actor) {
     axios.post('/filmography', {
-      data: this.state.officialActor
+      data: actor
     })
-      .then((data) => console.log(data.data.cast))
+      .then((data) => {
+        let filmography = data.data.map(movie => movie.title)
+        this.setState({
+          filmography: filmography
+        })
+      })
       .catch(() => console.log('The GET request failed'))
   }
 

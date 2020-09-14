@@ -38,13 +38,13 @@ app.post('/getCast', function (req, res) {
   const searchTerm = req.body.data;
   axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${API.tmdbAPI}&query=${searchTerm}`)
     .then((data) => {
-      console.log('movieData ', data.data.results);
+      // console.log('movieData ', data.data.results);
       // this grabs the first movie of the list because I will trust the search algorithm of tmdb
       const bestMatch = data.data.results[0].id;
       // this searches for the cast of the best match
       axios.get(`https://api.themoviedb.org/3/movie/${bestMatch}/credits?api_key=${API.tmdbAPI}`)
         .then((data) => {
-          console.log('credits data ', data.data);
+          // console.log('credits data ', data.data);
           // we will return the cast data for that first result to client
           res.status(200).send(data.data.cast);
         })
@@ -56,10 +56,18 @@ app.post('/getCast', function (req, res) {
 // this will get the filmography of the searched actor
 app.post('/filmography', function (req, res) {
   const searchedActor = req.body.data;
-  console.log(searchedActor);
-  axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${API.tmdbAPI}&query=${searchedActor}`)
+  console.log('searchedActor ', searchedActor);
+  axios.get(`https://api.themoviedb.org/3/search/person?api_key=${API.tmdbAPI}&language=en-US&query=${searchedActor}`)
     .then((data) => {
-      console.log('data ', data);
+      // console.log('data ', data.data.results);
+      const actorID = data.data.results[0].id;
+      console.log(actorID);
+      axios.get(`https://api.themoviedb.org/3/person/${actorID}/movie_credits?api_key=${API.tmdbAPI}&language=en-US`)
+        .then((data) => {
+          console.log('data ', data.data.cast);
+          res.status(200).send(data.data.cast)
+        })
+        .catch(() => console.log(`There was an error getting ${searchedActor}'s movie credits`))
     })
     .catch(() => console.log(`There was an error getting ${searchedActor}'s filmography`))
 })
