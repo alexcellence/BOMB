@@ -24,6 +24,7 @@ class App extends React.Component {
     this.handleSubmit = this.handleSubmit.bind(this);
     this.getFilmography = this.getFilmography.bind(this);
     this.getTitle = this.getTitle.bind(this);
+    this.clearStream = this.clearStream.bind(this);
   }
 
   handleChange(event) {
@@ -88,13 +89,24 @@ class App extends React.Component {
         updatedStream.push('BOMB!');
         this.setState({
           stream: updatedStream,
-          movies: []
+          movies: [],
+          movieTurn: !this.state.movieTurn
         })
       }
     }
     this.setState({
       // search term is tied to the input box, so clear it
       searchTerm: ''
+    })
+  }
+
+  clearStream() {
+    this.setState({
+      stream: [],
+      movies: [],
+      movieTurn: true,
+      cast: [],
+      officialTitle: ''
     })
   }
 
@@ -110,40 +122,58 @@ class App extends React.Component {
         let updatedMovies = [...this.state.movies];
         let updatedStream = [...this.state.stream];
 
+        console.log('title data ', data.data.results);
         let movieTitle = searchTerm.toLowerCase();
+        let relevantTitles = data.data.results.slice(0, 4);
+        console.log('relevantTitles ', relevantTitles);
 
-        const possibleTitles = data.data.results.map(movie => movie.title.toLowerCase());
-        console.log(data.data.results);
+        const possibleTitles = relevantTitles.map(movie => movie.title.toLowerCase());
         console.log('possibleTitles ', possibleTitles);
-        console.log('movieTitle ', movieTitle)
 
         let titleIndex = possibleTitles.indexOf(movieTitle);
         console.log('titleIndex ', titleIndex);
-        let today = new Date();
-        console.log('today ', today);
-        console.log('moment ', moment().format('YYYY-MM-DD'));
+        // let today = new Date();
+        // console.log('today ', today);
+        // console.log('moment ', moment().format('YYYY-MM-DD'));
 
-        if (titleIndex > -1 && titleIndex < 5) {
-          movieTitle = data.data.results[titleIndex].title;
+        console.log('movieTitle length ', movieTitle.length);
+        console.log('real length ', relevantTitles[0].title.length);
+
+        if (titleIndex > -1 && titleIndex < 4) {
+          if (movieTitle.length / relevantTitles[titleIndex].title.length < 1/4) {
+            alert(`Could not find a movie named ${movieTitle}!`)
+            movieTitle = undefined;
+          } else {
+            movieTitle = relevantTitles[titleIndex].title;
+            updatedMovies.push(movieTitle);
+          }
         } else {
-          movieTitle = data.data.results[0].title;
+          if (movieTitle.length / relevantTitles[0].title.length < 1/4) {
+            alert(`Could not find a movie named ${movieTitle}!`)
+            movieTitle = undefined;
+          } else {
+            movieTitle = relevantTitles[0].title;
+            updatedMovies.push(movieTitle);
+          }
         }
-        console.log('updated movie title ', movieTitle);
-        updatedMovies.push(movieTitle);
+
+        // if (titleIndex > -1 && titleIndex < 4) {
+        //   movieTitle = relevantTitles[titleIndex].title;
+        // } else {
+        //   movieTitle = relevantTitles[0].title;
+        // }
 
         // if the stream does not already have the search term, update the stream to include it
-        if (!this.state.stream.includes(movieTitle)) {
+        if (!this.state.stream.includes(movieTitle) && movieTitle !== undefined) {
           updatedStream.push(movieTitle);
+          this.setState({
+            officialTitle: movieTitle,
+            movies: updatedMovies,
+            stream: updatedStream,
+            // we only switch the turns if a valid movie title was returned
+            movieTurn: !this.state.movieTurn
+          })
         }
-
-        this.setState({
-          // officialTitle: officialTitle,
-          movies: updatedMovies,
-          stream: updatedStream,
-          // we only switch the turns if a valid movie title was returned
-          movieTurn: !this.state.movieTurn
-        })
-
       })
       .catch(() => {
         console.log('There was an error getting a movie title');
@@ -156,8 +186,8 @@ class App extends React.Component {
       data: this.state.searchTerm
     })
       .then((data) => {
-        console.log('castData ', data.data)
         const cast = data.data.map(person => person.name);
+        console.log('cast ', cast)
         this.setState({
           cast: cast
         })
@@ -171,6 +201,7 @@ class App extends React.Component {
     })
       .then((data) => {
         let filmography = data.data.map(movie => movie.title)
+        console.log('filmography ', filmography)
         this.setState({
           filmography: filmography
         })
@@ -185,6 +216,7 @@ class App extends React.Component {
     return (
       <div>
         <h1>BOMB</h1>
+        <button onClick={this.clearStream}>Defuse</button>
         <Form turn={this.state.movieTurn} searchTerm={this.state.searchTerm} handleChange={this.handleChange} handleSubmit={this.handleSubmit}/>
         <Stream stream={this.state.stream}/>
       </div>
