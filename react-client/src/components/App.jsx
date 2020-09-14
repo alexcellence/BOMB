@@ -41,7 +41,7 @@ class App extends React.Component {
     // these are the options for fuse
     const options = {
       includeScore: true,
-      threshold: 0.3
+      threshold: 0.5
     };
 
     if (this.state.movieTurn) {
@@ -88,6 +88,7 @@ class App extends React.Component {
       let fuse = new Fuse(this.state.cast, options);
       const searchedActor = this.state.searchTerm;
       let actorResults = fuse.search(searchedActor);
+      console.log('actor results ', actorResults);
       if (actorResults.length > 0) {
         let foundActor = fuse.search(this.state.searchTerm)[0].item;
         updatedStream.push(foundActor);
@@ -139,9 +140,13 @@ class App extends React.Component {
 
         console.log(`Movie data when searching for ${movieTitle} `, data.data.results);
 
-        let relevantTitles = data.data.results.slice(0, 4);
-        console.log('relevantTitles ', relevantTitles);
-        let possibleTitles = relevantTitles.filter(movie => movie.vote_count > 10);
+        let relevantTitles = data.data.results.filter(movie => movie.vote_count > 10);
+
+        let possibleTitles = relevantTitles.slice(0, 4);
+
+        // let relevantTitles = data.data.results.slice(0, 4);
+        // console.log('relevantTitles ', relevantTitles);
+        // let possibleTitles = relevantTitles.filter(movie => movie.vote_count > 10);
 
         possibleTitles = possibleTitles.map(movie => movie.title.toLowerCase());
 
