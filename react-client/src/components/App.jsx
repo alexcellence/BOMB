@@ -3,6 +3,7 @@ import axios from 'axios';
 import Form from './Form.jsx';
 import Stream from './Stream.jsx';
 import ListItem from './ListItem.jsx';
+// import Fuse from 'fuse.js';
 
 class App extends React.Component {
   constructor(props) {
@@ -11,7 +12,7 @@ class App extends React.Component {
       movies: [],
       actors: [],
       movieTurn: true,
-      currentMovie: '',
+      officialActor: '',
       searchTerm: '',
       stream: [],
       cast: [],
@@ -20,8 +21,8 @@ class App extends React.Component {
 
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
-    this.checkActor = this.checkActor.bind(this);
-    this.checkMovie = this.checkMovie.bind(this);
+    this.getFilmography = this.getFilmography.bind(this);
+    this.getTitle = this.getTitle.bind(this);
   }
 
   handleChange(event) {
@@ -38,28 +39,48 @@ class App extends React.Component {
 
     if (this.state.movieTurn) {
       // submit a get request with the movie search
-      this.checkMovie(this.state.searchTerm);
+      this.getTitle(this.state.searchTerm);
+      this.getCast(this.state.searchTerm);
     } else {
-      // if it's not the movies turn it must be the actor's turn so add the most recent search term to the actors array
-      updatedActors.push(this.state.searchTerm);
+      // time to submit an actor
+      // these are the options for fuse
+      const options = {
+        includeScore: true,
+        threshold: 0.3
+      };
+      const fuse = new Fuse(this.state.cast, options);
+      const searchedActor = this.state.searchTerm;
+      let actorResults = fuse.search(searchedActor);
+      let updatedStream = [...this.state.stream];
+      if (actorResults.length > 0) {
+        let foundActor = fuse.search(this.state.searchTerm)[0].item;
+        updatedStream.push(foundActor);
+        this.setState({
+          stream: updatedStream,
+          officialActor: foundActor
+        })
+        this.getFilmography(this.state.officialActor);
+      } else {
+        updatedStream.push('BOMB!');
+        this.setState({
+          stream: updatedStream
+        })
+      }
     }
-
     this.setState({
-      // after clicking submit, change the turn to be opposite of what it was before
-      movieTurn: !this.state.movieTurn,
       // search term is tied to the input box, so clear it
       searchTerm: ''
     })
   }
 
-  checkMovie(searchTerm) {
-    axios.post('/movies', {
+  getTitle(searchTerm) {
+    axios.post('/getTitle', {
       data: this.state.searchTerm
     })
       .then((data) => {
         let updatedMovies = [...this.state.movies];
         let updatedStream = [...this.state.stream];
-
+        console.log(data.data.results);
         let officialTitle = data.data.results[0].title;
         updatedMovies.push(officialTitle);
 
@@ -71,16 +92,35 @@ class App extends React.Component {
         this.setState({
           officialTitle: officialTitle,
           movies: updatedMovies,
-          stream: updatedStream
+          stream: updatedStream,
+          // we only switch the turns if a valid movie title was returned
+          movieTurn: !this.state.movieTurn
         })
 
       })
-      .catch(() => console.log('The GET request failed'))
+      .catch(() => {
+        console.log('There was an error getting a movie title');
+        alert('Could not find a movie with that title!');
+      })
   }
 
-  checkActor(text) {
-    axios.post('/actors', {
+  getCast(searchTerm) {
+    axios.post('/getCast', {
       data: this.state.searchTerm
+    })
+      .then((data) => {
+        console.log('castData ', data.data)
+        const cast = data.data.map(person => person.name);
+        this.setState({
+          cast: cast
+        })
+      })
+      .catch(() => console.log('There was an error getting the cast data'))
+  }
+
+  getFilmography(actor) {
+    axios.post('/filmography', {
+      data: this.state.officialActor
     })
       .then((data) => console.log(data.data.cast))
       .catch(() => console.log('The GET request failed'))
