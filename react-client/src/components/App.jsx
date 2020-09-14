@@ -14,7 +14,8 @@ class App extends React.Component {
       currentMovie: '',
       searchTerm: '',
       stream: [],
-      cast: []
+      cast: [],
+      officialTitle: ''
     }
 
     this.handleChange = this.handleChange.bind(this);
@@ -32,18 +33,10 @@ class App extends React.Component {
   handleSubmit(event) {
     event.preventDefault();
 
-    let updatedStream = [...this.state.stream];
     let updatedMovies = [...this.state.movies];
     let updatedActors = [...this.state.actors];
 
-    // if the stream does not already have the search term, update the stream to include it
-    if (!this.state.stream.includes(this.state.searchTerm)) {
-      updatedStream.push(this.state.searchTerm);
-    }
-
-    // if it's the movie turn, add the most recent search term to the movies array
     if (this.state.movieTurn) {
-      updatedMovies.push(this.state.searchTerm);
       // submit a get request with the movie search
       this.checkMovie(this.state.searchTerm);
     } else {
@@ -55,10 +48,7 @@ class App extends React.Component {
       // after clicking submit, change the turn to be opposite of what it was before
       movieTurn: !this.state.movieTurn,
       // search term is tied to the input box, so clear it
-      searchTerm: '',
-      stream: updatedStream,
-      movies: updatedMovies,
-      actors: updatedActors
+      searchTerm: ''
     })
   }
 
@@ -67,12 +57,23 @@ class App extends React.Component {
       data: this.state.searchTerm
     })
       .then((data) => {
-        console.log('data ', data.data.results)
-        let officialTitle = data.data.results;
-        let cast = data.data.cast.map(cast => cast.name);
+        let updatedMovies = [...this.state.movies];
+        let updatedStream = [...this.state.stream];
+
+        let officialTitle = data.data.results[0].title;
+        updatedMovies.push(officialTitle);
+
+        // if the stream does not already have the search term, update the stream to include it
+        if (!this.state.stream.includes(officialTitle)) {
+          updatedStream.push(officialTitle);
+        }
+
         this.setState({
-          cast: cast
+          officialTitle: officialTitle,
+          movies: updatedMovies,
+          stream: updatedStream
         })
+
       })
       .catch(() => console.log('The GET request failed'))
   }

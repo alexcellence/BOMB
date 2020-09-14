@@ -24,13 +24,14 @@ app.post('/movies', function (req, res) {
     .then((data) => {
       // the first result is normally spot on, so we will rely on that result for our connected data
       const bestMatch = data.data.results[0].id;
-      res.status(200).send(data.data);
       axios.get(`https://api.themoviedb.org/3/movie/${bestMatch}/credits?api_key=${API.tmdbAPI}`)
         .then((data) => {
           console.log('credits data ', data.data);
           // we will return the cast data for that first result to client
           res.status(200).send(data.data);
         })
+        .catch(() => console.log('There was an error getting movie data from tmdb'))
+      res.status(200).send(data.data);
     })
     .catch(() => console.log('There was an error geting data from tmdb'));
 });
