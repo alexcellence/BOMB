@@ -117,7 +117,7 @@ class App extends React.Component {
       .then((data) => {
         const options = {
           includeScore: true,
-          threshold: 0.3
+          threshold: 0.2
         };
         let updatedMovies = [...this.state.movies];
         let updatedStream = [...this.state.stream];
@@ -156,12 +156,6 @@ class App extends React.Component {
             updatedMovies.push(movieTitle);
           }
         }
-
-        // if (titleIndex > -1 && titleIndex < 4) {
-        //   movieTitle = relevantTitles[titleIndex].title;
-        // } else {
-        //   movieTitle = relevantTitles[0].title;
-        // }
 
         // if the stream does not already have the search term, update the stream to include it
         if (!this.state.stream.includes(movieTitle) && movieTitle !== undefined) {

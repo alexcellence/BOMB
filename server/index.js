@@ -35,16 +35,21 @@ app.post('/getTitle', function (req, res) {
 
 // this will get the cast of the searched movie
 app.post('/getCast', function (req, res) {
-  const searchTerm = req.body.data;
+  const searchTerm = req.body.data.toLowerCase();
   axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${API.tmdbAPI}&query=${searchTerm}`)
     .then((data) => {
-      // console.log('movieData ', data.data.results);
-      // this grabs the first movie of the list because I will trust the search algorithm of tmdb
-      const bestMatch = data.data.results[0].id;
+      // only take the first four movies on the list because they will be the most relevant
+      const relevantTitles = data.data.results.slice(0, 4).map(movie => movie.title.toLowerCase());
+      // search for an exact match with the search term first
+      let titleIndex = relevantTitles.indexOf(searchTerm);
+      // if there is no exact match, go with the first movie that tmdb suggests
+      if (titleIndex === -1) {
+        titleIndex = 0;
+      }
+      const bestMatch = data.data.results[titleIndex].id;
       // this searches for the cast of the best match
       axios.get(`https://api.themoviedb.org/3/movie/${bestMatch}/credits?api_key=${API.tmdbAPI}`)
         .then((data) => {
-          // console.log('credits data ', data.data);
           // we will return the cast data for that first result to client
           res.status(200).send(data.data.cast);
         })
