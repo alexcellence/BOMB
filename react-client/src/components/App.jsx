@@ -47,13 +47,26 @@ class App extends React.Component {
     if (this.state.movieTurn) {
       if (this.state.movies.length > 0) {
         const filmographyFuse = new Fuse(this.state.filmography, options);
-        const movieGuess = this.state.searchTerm;
+        let movieGuess = this.state.searchTerm.toLowerCase();
+        console.log('movie guess ', movieGuess);
+        console.log('type of movie guess ', typeof movieGuess)
+        let theIndex = movieGuess.indexOf('the');
+        console.log('the index ', movieGuess.indexOf('the'));
+        if (movieGuess.indexOf('the') > -1) {
+          movieGuess = movieGuess.replace('the', '');
+        }
+
+        console.log('movie guess without the ', movieGuess);
         let movieResults = filmographyFuse.search(movieGuess);
+        console.log('movieFuse results ', movieResults);
         if (movieResults.length > 0) {
           const foundMovie = movieResults[0].item;
-          updatedStream.push(foundMovie);
+          console.log('foundmovie ', foundMovie);
+          // updatedStream.push(foundMovie);
           this.setState({
-            stream: updatedStream
+            // stream: updatedStream,
+            // movieTurn: !this.state.movieTurn,
+            officialTitle: foundMovie
           })
           this.getTitle(foundMovie);
           this.getCast(foundMovie);
@@ -122,12 +135,16 @@ class App extends React.Component {
         let updatedMovies = [...this.state.movies];
         let updatedStream = [...this.state.stream];
 
-        console.log('title data ', data.data.results);
         let movieTitle = searchTerm.toLowerCase();
+
+        console.log(`Movie data when searching for ${movieTitle} `, data.data.results);
+
         let relevantTitles = data.data.results.slice(0, 4);
         console.log('relevantTitles ', relevantTitles);
+        let possibleTitles = relevantTitles.filter(movie => movie.vote_count > 10);
 
-        const possibleTitles = relevantTitles.map(movie => movie.title.toLowerCase());
+        possibleTitles = possibleTitles.map(movie => movie.title.toLowerCase());
+
         console.log('possibleTitles ', possibleTitles);
 
         let titleIndex = possibleTitles.indexOf(movieTitle);
@@ -136,15 +153,13 @@ class App extends React.Component {
         // console.log('today ', today);
         // console.log('moment ', moment().format('YYYY-MM-DD'));
 
-        console.log('movieTitle length ', movieTitle.length);
-        console.log('real length ', relevantTitles[0].title.length);
-
         if (titleIndex > -1 && titleIndex < 4) {
           if (movieTitle.length / relevantTitles[titleIndex].title.length < 1/4) {
             alert(`Could not find a movie named ${movieTitle}!`)
             movieTitle = undefined;
           } else {
-            movieTitle = relevantTitles[titleIndex].title;
+            movieTitle = `${relevantTitles[titleIndex].title} (${relevantTitles[titleIndex].release_date.slice(0, 4)})`;
+            // movieTitle = `${relevantTitles[titleIndex].title}`;
             updatedMovies.push(movieTitle);
           }
         } else {
@@ -152,7 +167,7 @@ class App extends React.Component {
             alert(`Could not find a movie named ${movieTitle}!`)
             movieTitle = undefined;
           } else {
-            movieTitle = relevantTitles[0].title;
+            movieTitle = `${relevantTitles[0].title} (${relevantTitles[0].release_date.slice(0, 4)})`;
             updatedMovies.push(movieTitle);
           }
         }
@@ -181,7 +196,7 @@ class App extends React.Component {
     })
       .then((data) => {
         const cast = data.data.map(person => person.name);
-        console.log('cast ', cast)
+        console.log(`${this.state.officialTitle}'s cast `, cast)
         this.setState({
           cast: cast
         })
@@ -195,7 +210,7 @@ class App extends React.Component {
     })
       .then((data) => {
         let filmography = data.data.map(movie => movie.title)
-        console.log('filmography ', filmography)
+        console.log(`${this.state.officialActor}'s filmography `, filmography)
         this.setState({
           filmography: filmography
         })
