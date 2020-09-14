@@ -21,7 +21,7 @@ class App extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.checkActor = this.checkActor.bind(this);
-    this.checkMovie = this.checkMovie.bind(this);
+    this.getTitle = this.getTitle.bind(this);
   }
 
   handleChange(event) {
@@ -38,10 +38,11 @@ class App extends React.Component {
 
     if (this.state.movieTurn) {
       // submit a get request with the movie search
-      this.checkMovie(this.state.searchTerm);
+      this.getTitle(this.state.searchTerm);
+      this.getCast(this.state.searchTerm);
     } else {
-      // if it's not the movies turn it must be the actor's turn so add the most recent search term to the actors array
-      updatedActors.push(this.state.searchTerm);
+      // time to submit an actor
+
     }
 
     this.setState({
@@ -52,8 +53,8 @@ class App extends React.Component {
     })
   }
 
-  checkMovie(searchTerm) {
-    axios.post('/movies', {
+  getTitle(searchTerm) {
+    axios.post('/getTitle', {
       data: this.state.searchTerm
     })
       .then((data) => {
@@ -76,6 +77,20 @@ class App extends React.Component {
 
       })
       .catch(() => console.log('The GET request failed'))
+  }
+
+  getCast(searchTerm) {
+    axios.post('/getCast', {
+      data: this.state.searchTerm
+    })
+      .then((data) => {
+        console.log('castData ', data.data)
+        const cast = data.data.map(person => person.name);
+        this.setState({
+          cast: cast
+        })
+      })
+      .catch(() => console.log('There was an error getting the cast data'))
   }
 
   checkActor(text) {

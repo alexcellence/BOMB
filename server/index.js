@@ -17,23 +17,39 @@ app.use((req, res, next) => {
   next();
 })
 
-app.post('/movies', function (req, res) {
+app.post('/getTitle', function (req, res) {
   // this is the contents of the React form when submit is clicked
   const searchTerm = req.body.data;
   axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${API.tmdbAPI}&query=${searchTerm}`)
     .then((data) => {
-      // the first result is normally spot on, so we will rely on that result for our connected data
+
+      // axios.get(`https://api.themoviedb.org/3/movie/${bestMatch}/credits?api_key=${API.tmdbAPI}`)
+      //   .then((data) => {
+      //     console.log('credits data ', data.data);
+      //     // we will return the cast data for that first result to client
+      //     res.status(200).send(data.data);
+      //   })
+      //   .catch(() => console.log('There was an error getting movie data from tmdb'))
+      res.status(200).send(data.data);
+    })
+    .catch(() => console.log('There was an error geting data from tmdb'));
+});
+
+app.post('/getCast', function (req, res) {
+  const searchTerm = req.body.data;
+  axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${API.tmdbAPI}&query=${searchTerm}`)
+    .then((data) => {
+      console.log('movieData ', data.data.results);
       const bestMatch = data.data.results[0].id;
       axios.get(`https://api.themoviedb.org/3/movie/${bestMatch}/credits?api_key=${API.tmdbAPI}`)
         .then((data) => {
           console.log('credits data ', data.data);
           // we will return the cast data for that first result to client
-          res.status(200).send(data.data);
+          res.status(200).send(data.data.cast);
         })
         .catch(() => console.log('There was an error getting movie data from tmdb'))
-      res.status(200).send(data.data);
     })
-    .catch(() => console.log('There was an error geting data from tmdb'));
+    .catch(() => console.log('There was an error geting cast data from tmdb'));
 });
 
 app.listen(4000, function() {
