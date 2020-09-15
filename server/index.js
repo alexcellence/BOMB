@@ -77,15 +77,31 @@ app.post('/filmography', function (req, res) {
     .then((data) => {
       // console.log('data ', data.data.results);
       const actorID = data.data.results[0].id;
-      console.log(actorID);
+      // console.log(actorID);
       axios.get(`https://api.themoviedb.org/3/person/${actorID}/movie_credits?api_key=${API.tmdbAPI}&language=en-US`)
         .then((data) => {
-          console.log('data ', data.data.cast);
+          // console.log('data ', data.data.cast);
           res.status(200).send(data.data.cast)
         })
         .catch(() => console.log(`There was an error getting ${searchedActor}'s movie credits`))
     })
     .catch(() => console.log(`There was an error getting ${searchedActor}'s filmography`))
+})
+
+app.post('/images', function (req, res) {
+  const searchedActor = req.body.data;
+  console.log('searched actor ', searchedActor);
+  axios.get(`https://api.themoviedb.org/3/search/person?api_key=${API.tmdbAPI}&language=en-US&query=${searchedActor}`)
+    .then((data) => {
+      const actorID = data.data.results[0].id;
+      axios.get(`https://api.themoviedb.org/3/person/${actorID}/images?api_key=${API.tmdbAPI}`)
+        .then((data) => {
+          console.log('Data for an image request ', data.data.profiles);
+          res.status(200).send(data.data.profiles)
+        })
+        .catch(() => console.log(`There was an error getting images for ${searchedActor}`))
+    })
+    .catch(() => console.log(`There was an error getting images for ${searchedActor}`))
 })
 
 app.listen(4000, function() {

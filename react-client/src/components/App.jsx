@@ -17,7 +17,6 @@ const Container = styled.div`
 `
 
 const Title = styled.div`
-  color: blue;
   grid-column-start: 2;
   grid-column-end: 3;
   text-align: center;
@@ -34,6 +33,7 @@ const Streak = styled.div`
   grid-column-start: 3;
   grid-column-end: 4;
   margin: auto;
+  font-family: Circular, -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
 `
 
 const DefuseButton = styled.button`
@@ -46,6 +46,16 @@ const DefuseButton = styled.button`
   margin: auto;
   border-radius: 8px;
   font-family: Circular, -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+  border-width: 1px;
+  border-style: solid;
+  outline: none;
+  &:hover{
+    background-color: #D8D8D8;
+  };
+  &:active{
+    transform: translateY(2px);
+  };
+  cursor: pointer;
 `
 
 class App extends React.Component {
@@ -68,6 +78,7 @@ class App extends React.Component {
     this.getFilmography = this.getFilmography.bind(this);
     this.getTitle = this.getTitle.bind(this);
     this.clearStream = this.clearStream.bind(this);
+    this.getActorImage = this.getActorImage.bind(this);
   }
 
   handleChange(event) {
@@ -137,8 +148,13 @@ class App extends React.Component {
       console.log('This is the actor that was searched for ', searchedActor);
       let actorResults = fuse.search(searchedActor);
       console.log('actor results ', actorResults);
+      let sortedActorResults = fuse.search(searchedActor).sort((a, b) => {
+        return a.refIndex - b.refIndex;
+      });
+      console.log('sortedActorResults ', sortedActorResults)
       if (actorResults.length > 0) {
-        let foundActor = fuse.search(this.state.searchTerm)[0].item;
+        // let foundActor = fuse.search(this.state.searchTerm)[0].item;
+        let foundActor = sortedActorResults[0].item;
         updatedStream.push(foundActor);
         this.setState({
           turnsThisRound: this.state.turnsThisRound + 1,
@@ -147,6 +163,7 @@ class App extends React.Component {
           movieTurn: !this.state.movieTurn
         })
         this.getFilmography(foundActor);
+        this.getActorImage(foundActor);
       } else {
         alert(`${this.state.searchTerm} is not in ${this.state.officialTitle}!`)
         updatedStream.push('BOMB!');
@@ -271,6 +288,16 @@ class App extends React.Component {
         })
       })
       .catch(() => console.log('The GET request failed'))
+  }
+
+  getActorImage(actor) {
+    axios.post('/images', {
+      data: actor
+    })
+      .then((data) => {
+        console.log(`This is the image data for ${actor} `, data.data);
+      })
+      .catch(() => console.log(`There was an error getting an image for ${actor}`))
   }
 
   componentDidMount() {
