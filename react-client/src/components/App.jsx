@@ -88,7 +88,9 @@ class App extends React.Component {
       officialTitle: '',
       turnsThisRound: 0,
       actorPhoto: '',
-      moviePoster: ''
+      moviePoster: '',
+      totalScores: [],
+      highScore: 0
     }
 
     this.handleChange = this.handleChange.bind(this);
@@ -112,6 +114,7 @@ class App extends React.Component {
     let updatedStream = [...this.state.stream];
 
     if (this.state.movieTurn) {
+      let scores = [...this.state.totalScores];
       if (this.state.movies.length > 0) {
         const options = {
           includeScore: true,
@@ -151,12 +154,14 @@ class App extends React.Component {
         } else {
           alert(`${this.state.officialActor} is not in ${this.state.searchTerm}!`);
           updatedStream.push('BOMB!');
+          scores.push(this.state.turnsThisRound);
           this.setState({
             turnsThisRound: 0,
             stream: updatedStream,
             movies: [],
             actorPhoto: '',
-            moviePoster: ''
+            moviePoster: '',
+            totalScores: scores
           })
         }
       } else {
@@ -165,6 +170,7 @@ class App extends React.Component {
         this.getCast(this.state.searchTerm);
       }
     } else {
+      let scores = [...this.state.totalScores];
       // time to submit an actor
       const options = {
         includeScore: true,
@@ -185,6 +191,7 @@ class App extends React.Component {
         updatedStream.push(foundActor);
         this.setState({
           turnsThisRound: this.state.turnsThisRound + 1,
+          highScore: Math.max(this.state.turnsThisRound + 1, ...this.state.totalScores),
           stream: updatedStream,
           officialActor: foundActor,
           movieTurn: !this.state.movieTurn,
@@ -195,13 +202,15 @@ class App extends React.Component {
       } else {
         alert(`${this.state.searchTerm} is not in ${this.state.officialTitle}!`)
         updatedStream.push('BOMB!');
+        scores.push(this.state.turnsThisRound);
         this.setState({
           turnsThisRound: 0,
           stream: updatedStream,
           movies: [],
           movieTurn: !this.state.movieTurn,
           actorPhoto: '',
-          moviePoster: ''
+          moviePoster: '',
+          totalScores: scores
         })
       }
     }
@@ -225,6 +234,9 @@ class App extends React.Component {
   }
 
   getTitle(searchTerm) {
+    if (searchTerm === undefined) {
+      alert('Please provide a valid movie title!');
+    }
     axios.post('/getTitle', {
       data: searchTerm
     })
@@ -264,11 +276,12 @@ class App extends React.Component {
             updatedMovies.push(movieTitle);
           }
         } else {
-          if (movieTitle.length / relevantTitles[0].title.length < 1/4) {
+          titleIndex = 0;
+          if (movieTitle.length / relevantTitles[titleIndex].title.length < 1/4) {
             alert(`Could not find a movie named ${movieTitle}!`)
             movieTitle = undefined;
           } else {
-            movieTitle = `${relevantTitles[0].title} (${relevantTitles[0].release_date.slice(0, 4)})`;
+            movieTitle = `${relevantTitles[titleIndex].title} (${relevantTitles[titleIndex].release_date.slice(0, 4)})`;
             updatedMovies.push(movieTitle);
           }
         }
@@ -278,12 +291,13 @@ class App extends React.Component {
           updatedStream.push(movieTitle);
           this.setState({
             turnsThisRound: this.state.turnsThisRound + 1,
+            highScore: Math.max(this.state.turnsThisRound + 1, ...this.state.totalScores),
             officialTitle: movieTitle,
             movies: updatedMovies,
             stream: updatedStream,
             // we only switch the turns if a valid movie title was returned
             movieTurn: !this.state.movieTurn,
-            moviePoster: relevantTitles[0].poster_path,
+            moviePoster: relevantTitles[titleIndex].poster_path,
             actorPhoto: ''
           })
         } else {
@@ -300,6 +314,9 @@ class App extends React.Component {
   }
 
   getCast(searchTerm) {
+    if (searchTerm === undefined) {
+      return;
+    }
     axios.post('/getCast', {
       data: searchTerm
     })
@@ -349,7 +366,7 @@ class App extends React.Component {
     return (
       <Container>
         <Title>BOMB!</Title>
-        <Streak>Current streak: {this.state.turnsThisRound}</Streak>
+        <Streak>Current streak: {this.state.turnsThisRound}<br></br>High score: {this.state.highScore}</Streak>
         <DefuseButton onClick={this.clearStream}>Defuse</DefuseButton>
         {this.state.actorPhoto ? <ActorPhoto src={`https://image.tmdb.org/t/p/w185${this.state.actorPhoto}`}></ActorPhoto> : null}
         <Form turn={this.state.movieTurn} searchTerm={this.state.searchTerm} handleChange={this.handleChange} handleSubmit={this.handleSubmit}/>
