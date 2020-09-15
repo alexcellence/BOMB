@@ -44,6 +44,8 @@ const DefuseButton = styled.button`
   height: 30px;
   width: 90px;
   margin: auto;
+  border-radius: 8px;
+  font-family: Circular, -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
 `
 
 class App extends React.Component {
@@ -128,7 +130,7 @@ class App extends React.Component {
       // time to submit an actor
       const options = {
         includeScore: true,
-        threshold: 0.5
+        threshold: 0.43
       };
       let fuse = new Fuse(this.state.cast, options);
       const searchedActor = this.state.searchTerm;
@@ -175,7 +177,7 @@ class App extends React.Component {
 
   getTitle(searchTerm) {
     axios.post('/getTitle', {
-      data: this.state.searchTerm
+      data: searchTerm
     })
       .then((data) => {
         const options = {
@@ -189,7 +191,7 @@ class App extends React.Component {
 
         console.log(`Movie data when searching for ${movieTitle} `, data.data.results);
 
-        let relevantTitles = data.data.results.filter(movie => movie.vote_count > 500).slice(0, 4);
+        let relevantTitles = data.data.results.filter(movie => movie.vote_count > 500).slice(0, 5);
         console.log('Relevant titles ', relevantTitles);
 
         const sortedMovies = relevantTitles.sort((a, b) => {
@@ -245,7 +247,7 @@ class App extends React.Component {
 
   getCast(searchTerm) {
     axios.post('/getCast', {
-      data: this.state.searchTerm
+      data: searchTerm
     })
       .then((data) => {
         const cast = data.data.map(person => person.name);

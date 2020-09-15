@@ -40,17 +40,19 @@ app.post('/getCast', function (req, res) {
   axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${API.tmdbAPI}&query=${searchTerm}`)
     .then((data) => {
       // filter list to only include movies with a vote count over 350 to weed out unpopular titles that share the same name then take only the first four on the list
-      const filteredMovies = data.data.results.filter(movie => movie.vote_count > 500).slice(0, 4);
+      const filteredMovies = data.data.results.filter(movie => movie.vote_count > 500).slice(0, 5);
       console.log(filteredMovies);
       const sortedMovies = filteredMovies.sort((a, b) => {
         return moment(a.release_date).diff(b.release_date);
       });
       console.log('sorted movies ', sortedMovies);
       // only take the first four movies on the list because they will be the most relevant
-      const relevantTitles = filteredMovies.slice(0, 4).map(movie => movie.title.toLowerCase());
+      const relevantTitles = filteredMovies.slice(0, 5).map(movie => movie.title.toLowerCase());
       console.log('relevant titles ', relevantTitles);
       // search for an exact match with the search term first
+      console.log('searchTerm ', searchTerm)
       let titleIndex = relevantTitles.indexOf(searchTerm);
+      console.log('titleIndex ', titleIndex);
       // if there is no exact match, go with the first movie that tmdb suggests
       if (titleIndex === -1) {
         titleIndex = 0;
