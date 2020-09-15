@@ -39,6 +39,7 @@ app.post('/getCast', function (req, res) {
   const searchTerm = req.body.data.toLowerCase();
   axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${API.tmdbAPI}&query=${searchTerm}`)
     .then((data) => {
+      console.log('searchTerm ', searchTerm);
       // filter list to only include movies with a vote count over 350 to weed out unpopular titles that share the same name then take only the first four on the list
       const filteredMovies = data.data.results.filter(movie => movie.vote_count > 500).slice(0, 5);
       console.log(filteredMovies);
@@ -80,7 +81,7 @@ app.post('/filmography', function (req, res) {
       // console.log(actorID);
       axios.get(`https://api.themoviedb.org/3/person/${actorID}/movie_credits?api_key=${API.tmdbAPI}&language=en-US`)
         .then((data) => {
-          // console.log('data ', data.data.cast);
+          console.log('data ', data.data.cast);
           res.status(200).send(data.data.cast)
         })
         .catch(() => console.log(`There was an error getting ${searchedActor}'s movie credits`))

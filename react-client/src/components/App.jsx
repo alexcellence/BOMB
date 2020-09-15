@@ -115,7 +115,8 @@ class App extends React.Component {
       if (this.state.movies.length > 0) {
         const options = {
           includeScore: true,
-          threshold: 0.3
+          threshold: 0.3,
+          includeMatches: true
         };
         const filmographyFuse = new Fuse(this.state.filmography, options);
         let movieGuess = this.state.searchTerm.toLowerCase();
@@ -126,10 +127,16 @@ class App extends React.Component {
         if (movieGuess.indexOf('the') > -1) {
           movieGuess = movieGuess.replace('the', '');
         }
-
         console.log('movie guess without the ', movieGuess);
+
         let movieResults = filmographyFuse.search(movieGuess);
         console.log('movieFuse results ', movieResults);
+
+        let sortedMovieResults = movieResults.sort((a, b) => {
+          return a.refIndex - b.refIndex;
+        });
+        console.log('sorted results ', sortedMovieResults);
+        // change this back to movieResults if the sorted version doesn't work out
         if (movieResults.length > 0) {
           const foundMovie = movieResults[0].item;
           console.log('foundmovie ', foundMovie);
@@ -211,7 +218,9 @@ class App extends React.Component {
       movies: [],
       movieTurn: true,
       cast: [],
-      officialTitle: ''
+      officialTitle: '',
+      moviePoster: '',
+      actorPhoto: ''
     })
   }
 
@@ -253,10 +262,10 @@ class App extends React.Component {
           } else {
             movieTitle = `${relevantTitles[titleIndex].title} (${relevantTitles[titleIndex].release_date.slice(0, 4)})`;
             updatedMovies.push(movieTitle);
-            this.setState({
-              moviePoster: relevantTitles[titleIndex].poster_path,
-              actorPhoto: ''
-            })
+            // this.setState({
+            //   moviePoster: relevantTitles[titleIndex].poster_path,
+            //   actorPhoto: ''
+            // })
           }
         } else {
           if (movieTitle.length / relevantTitles[0].title.length < 1/4) {
@@ -265,10 +274,10 @@ class App extends React.Component {
           } else {
             movieTitle = `${relevantTitles[0].title} (${relevantTitles[0].release_date.slice(0, 4)})`;
             updatedMovies.push(movieTitle);
-            this.setState({
-              moviePoster: relevantTitles[0].poster_path,
-              actorPhoto: ''
-            })
+            // this.setState({
+            //   moviePoster: relevantTitles[0].poster_path,
+            //   actorPhoto: ''
+            // })
           }
         }
 
@@ -281,15 +290,24 @@ class App extends React.Component {
             movies: updatedMovies,
             stream: updatedStream,
             // we only switch the turns if a valid movie title was returned
-            movieTurn: !this.state.movieTurn
+            movieTurn: !this.state.movieTurn,
+            moviePoster: relevantTitles[0].poster_path,
+            actorPhoto: ''
           })
         } else {
-          alert('Cannot use the same movie twice in one round!')
+          alert('Cannot use the same movie twice in one round!');
+          // this.setState({
+          //   moviePoster: relevantTitles[0].poster_path,
+          //   actorPhoto: ''
+          // })
         }
       })
       .catch(() => {
         console.log('There was an error getting a movie title');
         alert('Could not find a movie with that title!');
+        this.setState({
+          moviePoster: ''
+        })
       })
   }
 
@@ -312,7 +330,9 @@ class App extends React.Component {
       data: actor
     })
       .then((data) => {
-        let filmography = data.data.map(movie => movie.title)
+        let relevantFilmography = data.data.filter(movie => movie.vote_count > 25);
+        console.log('Relevant filmography ', relevantFilmography);
+        let filmography = relevantFilmography.map(movie => movie.title)
         console.log(`${this.state.officialActor}'s filmography `, filmography)
         this.setState({
           filmography: filmography
