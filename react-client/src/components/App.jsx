@@ -111,7 +111,7 @@ class App extends React.Component {
   handleEmptySubmit(event) {
     event.preventDefault();
     if (this.state.searchTerm === '') {
-      alert(`Please search for something!`);
+      alert(`What we've got here is failure to communicate.`);
     }
   }
 
@@ -143,13 +143,34 @@ class App extends React.Component {
         let movieResults = filmographyFuse.search(movieGuess);
         console.log('movieFuse results ', movieResults);
 
+        let unsortedTitles = filmographyFuse.search(movieGuess);
+        console.log('movieFuse results ', movieResults);
+
+        let movieResultsTitles = movieResults.map(movie => movie.item.toLowerCase());
+        console.log('Movie results titles ', movieResultsTitles);
+
+        let movieIndex = movieResultsTitles.indexOf(movieGuess);
+        console.log('movie index', movieIndex);
+
+        if (movieIndex === -1) {
+          movieIndex = 0;
+        }
         let sortedMovieResults = movieResults.sort((a, b) => {
           return a.refIndex - b.refIndex;
         });
+
+        for (var i = 0; i < sortedMovieResults.length; i++) {
+          if (sortedMovieResults[i].score === 0) {
+            movieIndex = i;
+          }
+        }
+
         console.log('sorted results ', sortedMovieResults);
         // change this back to movieResults if the sorted version doesn't work out
         if (movieResults.length > 0) {
-          const foundMovie = movieResults[0].item;
+          console.log('unsorted titles ', unsortedTitles);
+          console.log('movie index ', movieIndex);
+          const foundMovie = sortedMovieResults[movieIndex].item;
           console.log('foundmovie ', foundMovie);
           // updatedStream.push(foundMovie);
           this.setState({
@@ -343,7 +364,7 @@ class App extends React.Component {
       data: actor
     })
       .then((data) => {
-        let relevantFilmography = data.data.filter(movie => movie.vote_count > 25);
+        let relevantFilmography = data.data.filter(movie => movie.vote_count > 500);
         console.log('Relevant filmography ', relevantFilmography);
         let filmography = relevantFilmography.map(movie => movie.title)
         console.log(`${this.state.officialActor}'s filmography `, filmography)
