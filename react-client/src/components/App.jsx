@@ -250,10 +250,10 @@ class App extends React.Component {
 
         const lowercaseTitles = relevantTitles.map(movie => movie.title.toLowerCase());
 
-        console.log('lowercaseTitles ', lowercaseTitles);
+        console.log('Sorted lowercase titles ', lowercaseTitles);
 
         let titleIndex = lowercaseTitles.indexOf(movieTitle);
-        console.log('titleIndex ', titleIndex);
+        console.log('Title index (is there an exact match?) ', titleIndex);
 
         if (titleIndex > -1 && titleIndex < 4) {
           if (movieTitle.length / relevantTitles[titleIndex].title.length < 1/4) {
@@ -262,10 +262,6 @@ class App extends React.Component {
           } else {
             movieTitle = `${relevantTitles[titleIndex].title} (${relevantTitles[titleIndex].release_date.slice(0, 4)})`;
             updatedMovies.push(movieTitle);
-            // this.setState({
-            //   moviePoster: relevantTitles[titleIndex].poster_path,
-            //   actorPhoto: ''
-            // })
           }
         } else {
           if (movieTitle.length / relevantTitles[0].title.length < 1/4) {
@@ -274,10 +270,6 @@ class App extends React.Component {
           } else {
             movieTitle = `${relevantTitles[0].title} (${relevantTitles[0].release_date.slice(0, 4)})`;
             updatedMovies.push(movieTitle);
-            // this.setState({
-            //   moviePoster: relevantTitles[0].poster_path,
-            //   actorPhoto: ''
-            // })
           }
         }
 
@@ -296,10 +288,6 @@ class App extends React.Component {
           })
         } else {
           alert('Cannot use the same movie twice in one round!');
-          // this.setState({
-          //   moviePoster: relevantTitles[0].poster_path,
-          //   actorPhoto: ''
-          // })
         }
       })
       .catch(() => {
