@@ -30,7 +30,8 @@ const Label = styled.label`
 
 const Form = (props) => (
   <Input>
-    <form onSubmit={props.handleSubmit}>
+    {/* <form onSubmit={props.handleSubmit}> */}
+    <form onSubmit={props.searchTerm === '' ? props.handleEmptySubmit : props.handleSubmit}>
       <Label>
         {props.turn ? <p>Movie</p> : <p>Actor</p>}
         <input type="text" name="currentMovie" value={props.searchTerm} onChange={props.handleChange} />

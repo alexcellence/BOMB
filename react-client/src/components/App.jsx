@@ -99,12 +99,20 @@ class App extends React.Component {
     this.getTitle = this.getTitle.bind(this);
     this.clearStream = this.clearStream.bind(this);
     this.getActorImage = this.getActorImage.bind(this);
+    this.handleEmptySubmit = this.handleEmptySubmit.bind(this);
   }
 
   handleChange(event) {
     this.setState({
       searchTerm: event.target.value
     })
+  }
+
+  handleEmptySubmit(event) {
+    event.preventDefault();
+    if (this.state.searchTerm === '') {
+      alert(`Please search for something!`);
+    }
   }
 
   handleSubmit(event) {
@@ -287,7 +295,7 @@ class App extends React.Component {
         }
 
         // if the stream does not already have the search term, update the stream to include it
-        if (!this.state.stream.includes(movieTitle) && movieTitle !== undefined) {
+        if (!this.state.movies.includes(movieTitle) && movieTitle !== undefined) {
           updatedStream.push(movieTitle);
           this.setState({
             turnsThisRound: this.state.turnsThisRound + 1,
@@ -369,7 +377,7 @@ class App extends React.Component {
         <Streak>Current streak: {this.state.turnsThisRound}<br></br>High score: {this.state.highScore}</Streak>
         <DefuseButton onClick={this.clearStream}>Defuse</DefuseButton>
         {this.state.actorPhoto ? <ActorPhoto src={`https://image.tmdb.org/t/p/w185${this.state.actorPhoto}`}></ActorPhoto> : null}
-        <Form turn={this.state.movieTurn} searchTerm={this.state.searchTerm} handleChange={this.handleChange} handleSubmit={this.handleSubmit}/>
+        <Form turn={this.state.movieTurn} searchTerm={this.state.searchTerm} handleChange={this.handleChange} handleSubmit={this.handleSubmit} handleEmptySubmit={this.handleEmptySubmit}/>
         <Stream stream={this.state.stream} className={styles.stream}/>
         {this.state.moviePoster ? <MoviePoster src={`https://image.tmdb.org/t/p/w185${this.state.moviePoster}`}></MoviePoster> : null}
       </Container>
