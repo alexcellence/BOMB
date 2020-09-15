@@ -4,7 +4,47 @@ import Form from './Form.jsx';
 import Stream from './Stream.jsx';
 import ListItem from './ListItem.jsx';
 import moment from 'moment';
-// import Fuse from 'fuse.js';
+import styles from './app.scss';
+import styled from 'styled-components';
+
+const Container = styled.div`
+  display: grid;
+  grid-template-columns: 25% 50% 25%;
+  grid-template-rows: 10% 10% 60% 20%;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+`
+
+const Title = styled.div`
+  color: blue;
+  grid-column-start: 2;
+  grid-column-end: 3;
+  text-align: center;
+  font-family: 'Luckiest Guy', cursive;
+  font-size: 65px;
+  vertical-align: middle;
+  margin: auto;
+`
+
+const Streak = styled.div`
+  text-align: center;
+  grid-row-start: 2;
+  grid-row-end: 3;
+  grid-column-start: 3;
+  grid-column-end: 4;
+  margin: auto;
+`
+
+const DefuseButton = styled.button`
+  grid-column-start: 1;
+  grid-column-end: 2;
+  grid-row-start: 2;
+  grid-row-end: 3;
+  height: 30px;
+  width: 90px;
+  margin: auto;
+`
 
 class App extends React.Component {
   constructor(props) {
@@ -17,7 +57,8 @@ class App extends React.Component {
       searchTerm: '',
       stream: [],
       cast: [],
-      officialTitle: ''
+      officialTitle: '',
+      turnsThisRound: 0
     }
 
     this.handleChange = this.handleChange.bind(this);
@@ -73,6 +114,7 @@ class App extends React.Component {
           alert(`${this.state.officialActor} is not in ${this.state.searchTerm}!`);
           updatedStream.push('BOMB!');
           this.setState({
+            turnsThisRound: 0,
             stream: updatedStream,
             movies: []
           })
@@ -90,12 +132,14 @@ class App extends React.Component {
       };
       let fuse = new Fuse(this.state.cast, options);
       const searchedActor = this.state.searchTerm;
+      console.log('This is the actor that was searched for ', searchedActor);
       let actorResults = fuse.search(searchedActor);
       console.log('actor results ', actorResults);
       if (actorResults.length > 0) {
         let foundActor = fuse.search(this.state.searchTerm)[0].item;
         updatedStream.push(foundActor);
         this.setState({
+          turnsThisRound: this.state.turnsThisRound + 1,
           stream: updatedStream,
           officialActor: foundActor,
           movieTurn: !this.state.movieTurn
@@ -105,6 +149,7 @@ class App extends React.Component {
         alert(`${this.state.searchTerm} is not in ${this.state.officialTitle}!`)
         updatedStream.push('BOMB!');
         this.setState({
+          turnsThisRound: 0,
           stream: updatedStream,
           movies: [],
           movieTurn: !this.state.movieTurn
@@ -119,6 +164,7 @@ class App extends React.Component {
 
   clearStream() {
     this.setState({
+      turnsThisRound: 0,
       stream: [],
       movies: [],
       movieTurn: true,
@@ -180,6 +226,7 @@ class App extends React.Component {
         if (!this.state.stream.includes(movieTitle) && movieTitle !== undefined) {
           updatedStream.push(movieTitle);
           this.setState({
+            turnsThisRound: this.state.turnsThisRound + 1,
             officialTitle: movieTitle,
             movies: updatedMovies,
             stream: updatedStream,
@@ -229,12 +276,13 @@ class App extends React.Component {
 
   render () {
     return (
-      <div>
-        <h1>BOMB</h1>
-        <button onClick={this.clearStream}>Defuse</button>
+      <Container>
+        <Title>BOMB</Title>
+        <Streak>Current streak: {this.state.turnsThisRound}</Streak>
+        <DefuseButton onClick={this.clearStream}>Defuse</DefuseButton>
         <Form turn={this.state.movieTurn} searchTerm={this.state.searchTerm} handleChange={this.handleChange} handleSubmit={this.handleSubmit}/>
-        <Stream stream={this.state.stream}/>
-      </div>
+        <Stream stream={this.state.stream} className={styles.stream}/>
+      </Container>
     )
   }
 }
