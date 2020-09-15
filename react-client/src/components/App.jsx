@@ -38,14 +38,13 @@ class App extends React.Component {
 
     let updatedMovies = [...this.state.movies];
     let updatedStream = [...this.state.stream];
-    // these are the options for fuse
-    const options = {
-      includeScore: true,
-      threshold: 0.5
-    };
 
     if (this.state.movieTurn) {
       if (this.state.movies.length > 0) {
+        const options = {
+          includeScore: true,
+          threshold: 0.3
+        };
         const filmographyFuse = new Fuse(this.state.filmography, options);
         let movieGuess = this.state.searchTerm.toLowerCase();
         console.log('movie guess ', movieGuess);
@@ -85,6 +84,10 @@ class App extends React.Component {
       }
     } else {
       // time to submit an actor
+      const options = {
+        includeScore: true,
+        threshold: 0.5
+      };
       let fuse = new Fuse(this.state.cast, options);
       const searchedActor = this.state.searchTerm;
       let actorResults = fuse.search(searchedActor);
@@ -140,7 +143,7 @@ class App extends React.Component {
 
         console.log(`Movie data when searching for ${movieTitle} `, data.data.results);
 
-        let relevantTitles = data.data.results.filter(movie => movie.vote_count > 350).slice(0, 4);
+        let relevantTitles = data.data.results.filter(movie => movie.vote_count > 500).slice(0, 4);
         console.log('Relevant titles ', relevantTitles);
 
         const sortedMovies = relevantTitles.sort((a, b) => {

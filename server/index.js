@@ -40,7 +40,7 @@ app.post('/getCast', function (req, res) {
   axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${API.tmdbAPI}&query=${searchTerm}`)
     .then((data) => {
       // filter list to only include movies with a vote count over 350 to weed out unpopular titles that share the same name then take only the first four on the list
-      const filteredMovies = data.data.results.filter(movie => movie.vote_count > 350).slice(0, 4);
+      const filteredMovies = data.data.results.filter(movie => movie.vote_count > 500).slice(0, 4);
       console.log(filteredMovies);
       const sortedMovies = filteredMovies.sort((a, b) => {
         return moment(a.release_date).diff(b.release_date);
