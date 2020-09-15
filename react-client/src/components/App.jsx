@@ -58,6 +58,22 @@ const DefuseButton = styled.button`
   cursor: pointer;
 `
 
+const ActorPhoto = styled.img`
+  grid-column-start: 1;
+  grid-column-end: 2;
+  grid-row-start: 3;
+  grid-row-end: 4;
+  margin: auto;
+`
+
+const MoviePoster = styled.img`
+  grid-column-start: 3;
+  grid-column-end: 4;
+  grid-row-start: 3;
+  grid-row-end: 4;
+  margin: auto;
+`
+
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -70,7 +86,9 @@ class App extends React.Component {
       stream: [],
       cast: [],
       officialTitle: '',
-      turnsThisRound: 0
+      turnsThisRound: 0,
+      actorPhoto: '',
+      moviePoster: ''
     }
 
     this.handleChange = this.handleChange.bind(this);
@@ -230,6 +248,9 @@ class App extends React.Component {
           } else {
             movieTitle = `${relevantTitles[titleIndex].title} (${relevantTitles[titleIndex].release_date.slice(0, 4)})`;
             updatedMovies.push(movieTitle);
+            this.setState({
+              moviePoster: relevantTitles[titleIndex].poster_path
+            })
           }
         } else {
           if (movieTitle.length / relevantTitles[0].title.length < 1/4) {
@@ -238,6 +259,9 @@ class App extends React.Component {
           } else {
             movieTitle = `${relevantTitles[0].title} (${relevantTitles[0].release_date.slice(0, 4)})`;
             updatedMovies.push(movieTitle);
+            this.setState({
+              moviePoster: relevantTitles[0].poster_path
+            })
           }
         }
 
@@ -296,6 +320,9 @@ class App extends React.Component {
     })
       .then((data) => {
         console.log(`This is the image data for ${actor} `, data.data);
+        this.setState({
+          actorPhoto: data.data[0].file_path
+        })
       })
       .catch(() => console.log(`There was an error getting an image for ${actor}`))
   }
@@ -309,8 +336,10 @@ class App extends React.Component {
         <Title>BOMB</Title>
         <Streak>Current streak: {this.state.turnsThisRound}</Streak>
         <DefuseButton onClick={this.clearStream}>Defuse</DefuseButton>
+        {this.state.actorPhoto ? <ActorPhoto src={`https://image.tmdb.org/t/p/w185${this.state.actorPhoto}`}></ActorPhoto> : null}
         <Form turn={this.state.movieTurn} searchTerm={this.state.searchTerm} handleChange={this.handleChange} handleSubmit={this.handleSubmit}/>
         <Stream stream={this.state.stream} className={styles.stream}/>
+        {this.state.moviePoster ? <MoviePoster src={`https://image.tmdb.org/t/p/w185${this.state.moviePoster}`}></MoviePoster> : null}
       </Container>
     )
   }
