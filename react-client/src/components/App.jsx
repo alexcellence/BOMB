@@ -147,7 +147,9 @@ class App extends React.Component {
           this.setState({
             turnsThisRound: 0,
             stream: updatedStream,
-            movies: []
+            movies: [],
+            actorPhoto: '',
+            moviePoster: ''
           })
         }
       } else {
@@ -178,7 +180,8 @@ class App extends React.Component {
           turnsThisRound: this.state.turnsThisRound + 1,
           stream: updatedStream,
           officialActor: foundActor,
-          movieTurn: !this.state.movieTurn
+          movieTurn: !this.state.movieTurn,
+          moviePoster: ''
         })
         this.getFilmography(foundActor);
         this.getActorImage(foundActor);
@@ -189,7 +192,9 @@ class App extends React.Component {
           turnsThisRound: 0,
           stream: updatedStream,
           movies: [],
-          movieTurn: !this.state.movieTurn
+          movieTurn: !this.state.movieTurn,
+          actorPhoto: '',
+          moviePoster: ''
         })
       }
     }
@@ -249,7 +254,8 @@ class App extends React.Component {
             movieTitle = `${relevantTitles[titleIndex].title} (${relevantTitles[titleIndex].release_date.slice(0, 4)})`;
             updatedMovies.push(movieTitle);
             this.setState({
-              moviePoster: relevantTitles[titleIndex].poster_path
+              moviePoster: relevantTitles[titleIndex].poster_path,
+              actorPhoto: ''
             })
           }
         } else {
@@ -260,7 +266,8 @@ class App extends React.Component {
             movieTitle = `${relevantTitles[0].title} (${relevantTitles[0].release_date.slice(0, 4)})`;
             updatedMovies.push(movieTitle);
             this.setState({
-              moviePoster: relevantTitles[0].poster_path
+              moviePoster: relevantTitles[0].poster_path,
+              actorPhoto: ''
             })
           }
         }
@@ -333,7 +340,7 @@ class App extends React.Component {
   render () {
     return (
       <Container>
-        <Title>BOMB</Title>
+        <Title>BOMB!</Title>
         <Streak>Current streak: {this.state.turnsThisRound}</Streak>
         <DefuseButton onClick={this.clearStream}>Defuse</DefuseButton>
         {this.state.actorPhoto ? <ActorPhoto src={`https://image.tmdb.org/t/p/w185${this.state.actorPhoto}`}></ActorPhoto> : null}
