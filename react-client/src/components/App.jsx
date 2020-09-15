@@ -140,23 +140,20 @@ class App extends React.Component {
 
         console.log(`Movie data when searching for ${movieTitle} `, data.data.results);
 
-        let relevantTitles = data.data.results.filter(movie => movie.vote_count > 10);
+        let relevantTitles = data.data.results.filter(movie => movie.vote_count > 350).slice(0, 4);
+        console.log('Relevant titles ', relevantTitles);
 
-        let possibleTitles = relevantTitles.slice(0, 4);
+        const sortedMovies = relevantTitles.sort((a, b) => {
+          return moment(a.release_date).diff(b.release_date);
+        });
+        console.log('Sorted titles ', sortedMovies);
 
-        // let relevantTitles = data.data.results.slice(0, 4);
-        // console.log('relevantTitles ', relevantTitles);
-        // let possibleTitles = relevantTitles.filter(movie => movie.vote_count > 10);
+        const lowercaseTitles = relevantTitles.map(movie => movie.title.toLowerCase());
 
-        possibleTitles = possibleTitles.map(movie => movie.title.toLowerCase());
+        console.log('lowercaseTitles ', lowercaseTitles);
 
-        console.log('possibleTitles ', possibleTitles);
-
-        let titleIndex = possibleTitles.indexOf(movieTitle);
+        let titleIndex = lowercaseTitles.indexOf(movieTitle);
         console.log('titleIndex ', titleIndex);
-        // let today = new Date();
-        // console.log('today ', today);
-        // console.log('moment ', moment().format('YYYY-MM-DD'));
 
         if (titleIndex > -1 && titleIndex < 4) {
           if (movieTitle.length / relevantTitles[titleIndex].title.length < 1/4) {
@@ -164,7 +161,6 @@ class App extends React.Component {
             movieTitle = undefined;
           } else {
             movieTitle = `${relevantTitles[titleIndex].title} (${relevantTitles[titleIndex].release_date.slice(0, 4)})`;
-            // movieTitle = `${relevantTitles[titleIndex].title}`;
             updatedMovies.push(movieTitle);
           }
         } else {
@@ -187,6 +183,8 @@ class App extends React.Component {
             // we only switch the turns if a valid movie title was returned
             movieTurn: !this.state.movieTurn
           })
+        } else {
+          alert('Cannot use the same movie twice in one round!')
         }
       })
       .catch(() => {
