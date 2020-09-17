@@ -78,17 +78,17 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      movies: [],
-      filmography: [],
       movieTurn: true,
-      officialActor: '',
       searchTerm: '',
-      stream: [],
+      movies: [],
       cast: [],
       officialTitle: '',
-      turnsThisRound: 0,
+      officialActor: '',
+      filmography: [],
+      stream: [],
       actorPhoto: '',
       moviePoster: '',
+      turnsThisRound: 0,
       totalScores: [],
       highScore: 0
     }
@@ -163,25 +163,22 @@ class App extends React.Component {
             movieIndex = i;
           }
         }
-
         console.log('sorted results ', sortedMovieResults);
+
         // change this back to movieResults if the sorted version doesn't work out
         if (movieResults.length > 0) {
           console.log('unsorted titles ', unsortedTitles);
           console.log('movie index ', movieIndex);
           const foundMovie = sortedMovieResults[movieIndex].item;
           console.log('foundmovie ', foundMovie);
-          // updatedStream.push(foundMovie);
           this.setState({
-            // stream: updatedStream,
-            // movieTurn: !this.state.movieTurn,
             officialTitle: foundMovie
           })
           this.getTitle(foundMovie);
           this.getCast(foundMovie);
         } else {
           alert(`${this.state.officialActor} is not in ${this.state.searchTerm}!`);
-          updatedStream.push('BOMB!');
+          updatedStream.unshift('BOMB!');
           scores.push(this.state.turnsThisRound);
           this.setState({
             turnsThisRound: 0,
@@ -222,7 +219,7 @@ class App extends React.Component {
       if (actorResults.length > 0) {
         // let foundActor = fuse.search(this.state.searchTerm)[0].item;
         let foundActor = sortedActorResults[actorIndex].item;
-        updatedStream.push(foundActor);
+        updatedStream.unshift(foundActor);
         this.setState({
           turnsThisRound: this.state.turnsThisRound + 1,
           highScore: Math.max(this.state.turnsThisRound + 1, ...this.state.totalScores),
@@ -235,7 +232,7 @@ class App extends React.Component {
         this.getActorImage(foundActor);
       } else {
         alert(`${this.state.searchTerm} is not in ${this.state.officialTitle}!`)
-        updatedStream.push('BOMB!');
+        updatedStream.unshift('BOMB!');
         scores.push(this.state.turnsThisRound);
         this.setState({
           turnsThisRound: 0,
@@ -322,7 +319,7 @@ class App extends React.Component {
 
         // if the stream does not already have the search term, update the stream to include it
         if (!this.state.movies.includes(movieTitle) && movieTitle !== undefined) {
-          updatedStream.push(movieTitle);
+          updatedStream.unshift(movieTitle);
           this.setState({
             turnsThisRound: this.state.turnsThisRound + 1,
             highScore: Math.max(this.state.turnsThisRound + 1, ...this.state.totalScores),
