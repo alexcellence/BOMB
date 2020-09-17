@@ -132,12 +132,11 @@ class App extends React.Component {
         const filmographyFuse = new Fuse(this.state.filmography, options);
         let movieGuess = this.state.searchTerm.toLowerCase();
         console.log('movie guess ', movieGuess);
-        console.log('type of movie guess ', typeof movieGuess)
         let theIndex = movieGuess.indexOf('the');
         console.log('the index ', movieGuess.indexOf('the'));
-        if (movieGuess.indexOf('the') > -1) {
+        if (movieGuess.indexOf('the') === 0) {
           movieGuess = movieGuess.replace('the', '');
-        }
+        };
         console.log('movie guess without the ', movieGuess);
 
         let movieResults = filmographyFuse.search(movieGuess);
@@ -214,9 +213,15 @@ class App extends React.Component {
         return a.refIndex - b.refIndex;
       });
       console.log('sortedActorResults ', sortedActorResults)
+      let actorIndex = 0;
+      for (let i = 0; i < sortedActorResults.length; i++) {
+        if (sortedActorResults[i].score === 0) {
+          actorIndex = i;
+        }
+      }
       if (actorResults.length > 0) {
         // let foundActor = fuse.search(this.state.searchTerm)[0].item;
-        let foundActor = sortedActorResults[0].item;
+        let foundActor = sortedActorResults[actorIndex].item;
         updatedStream.push(foundActor);
         this.setState({
           turnsThisRound: this.state.turnsThisRound + 1,
