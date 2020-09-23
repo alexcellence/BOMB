@@ -142,20 +142,40 @@ class App extends React.Component {
         let movieResults = filmographyFuse.search(movieGuess);
         console.log('movieFuse results ', movieResults);
 
-        let unsortedTitles = filmographyFuse.search(movieGuess);
-        console.log('movieFuse results ', movieResults);
+        let movieTitles = movieResults.map(movie => movie.item);
+        console.log('movieFuse results with only titles ', movieTitles);
 
-        let movieResultsTitles = movieResults.map(movie => movie.item.toLowerCase());
+        // iterate through this.state.movies and check whether any of the movies there are in movieResults
+        for (var i = 0; i < this.state.movies.length; i++) {
+          for (var j = 0; j < movieTitles.length; j++) {
+            var currentMovie = this.state.movies[i];
+            console.log('currentMovie without year ', currentMovie.slice(0, currentMovie.length - 7));
+            if (currentMovie.slice(0, currentMovie.length - 7) === movieTitles[j]) {
+              movieTitles.splice(j, 1);
+            }
+          }
+        }
+        console.log('movieTitles without previous results ', movieTitles);
+
+        // let movieResultsTitles = movieResults.map(movie => movie.item.toLowerCase());
+        let movieResultsTitles = movieTitles.map(movie => movie.toLowerCase());
         console.log('Movie results titles ', movieResultsTitles);
 
+        console.log('movieGuess ', movieGuess);
         let movieIndex = movieResultsTitles.indexOf(movieGuess);
-        console.log('movie index', movieIndex);
 
         if (movieIndex === -1) {
           movieIndex = 0;
         }
-        let sortedMovieResults = movieResults.sort((a, b) => {
-          return a.refIndex - b.refIndex;
+        console.log('movie index', movieIndex);
+        // movie results sorted by refIndex
+        // let sortedMovieResults = movieResults.sort((a, b) => {
+        //   return a.refIndex - b.refIndex;
+        // });
+
+        // movie results sorted by score
+        let sortedMovieResults = movieResultsTitles.sort((a, b) => {
+          return a.score - b.score;
         });
 
         for (var i = 0; i < sortedMovieResults.length; i++) {
@@ -163,13 +183,12 @@ class App extends React.Component {
             movieIndex = i;
           }
         }
-        console.log('sorted results ', sortedMovieResults);
+        console.log('Movies sorted by refIndex ', sortedMovieResults);
 
         // change this back to movieResults if the sorted version doesn't work out
         if (movieResults.length > 0) {
-          console.log('unsorted titles ', unsortedTitles);
-          console.log('movie index ', movieIndex);
-          const foundMovie = sortedMovieResults[movieIndex].item;
+          const foundMovie = sortedMovieResults[movieIndex];
+          // const foundMovie = movieResults[movieIndex].item;
           console.log('foundmovie ', foundMovie);
           this.setState({
             officialTitle: foundMovie
@@ -177,7 +196,7 @@ class App extends React.Component {
           this.getTitle(foundMovie);
           this.getCast(foundMovie);
         } else {
-          alert(`${this.state.officialActor} is not in ${this.state.searchTerm}!`);
+          alert(`${this.state.officialActor} is not credited in ${this.state.searchTerm}!`);
           updatedStream.unshift('BOMB!');
           scores.push(this.state.turnsThisRound);
           this.setState({
@@ -202,7 +221,10 @@ class App extends React.Component {
         threshold: 0.43
       };
       let fuse = new Fuse(this.state.cast, options);
-      const searchedActor = this.state.searchTerm;
+      let searchedActor = this.state.searchTerm;
+      if (searchedActor === 'the rock' || searchedActor === 'rock') {
+        searchedActor = 'Dwayne Johnson'
+      }
       console.log('This is the actor that was searched for ', searchedActor);
       let actorResults = fuse.search(searchedActor);
       console.log('actor results ', actorResults);
@@ -276,10 +298,12 @@ class App extends React.Component {
           includeScore: true,
           threshold: 0.2
         };
+
         let updatedMovies = [...this.state.movies];
         let updatedStream = [...this.state.stream];
 
         let movieTitle = searchTerm.toLowerCase();
+        // let movieTitle = searchTerm;
 
         console.log(`Movie data when searching for ${movieTitle} `, data.data.results);
 
@@ -291,14 +315,26 @@ class App extends React.Component {
         });
         console.log('Sorted titles ', sortedMovies);
 
-        const lowercaseTitles = relevantTitles.map(movie => movie.title.toLowerCase());
-
+        let lowercaseTitles = relevantTitles.map(movie => movie.title.toLowerCase());
         console.log('Sorted lowercase titles ', lowercaseTitles);
+
+        lowercaseTitles = lowercaseTitles.map(function removeThe(movie) {
+          if (movie.indexOf('the') === 0) {
+            movie = movie.slice(4);
+          };
+          return movie;
+        })
+        console.log('Lowercase titles without the ', lowercaseTitles);
+
+        if (movieTitle.indexOf('the') === 0) {
+          movieTitle = movieTitle.slice(4);
+        };
+        console.log('Movie title without the ', movieTitle);
 
         let titleIndex = lowercaseTitles.indexOf(movieTitle);
         console.log('Title index (is there an exact match?) ', titleIndex);
 
-        if (titleIndex > -1 && titleIndex < 4) {
+        if (titleIndex > -1 && titleIndex <= 4) {
           if (movieTitle.length / relevantTitles[titleIndex].title.length < 1/4) {
             alert(`Could not find a movie named ${movieTitle}!`)
             movieTitle = undefined;
@@ -308,13 +344,15 @@ class App extends React.Component {
           }
         } else {
           titleIndex = 0;
-          if (movieTitle.length / relevantTitles[titleIndex].title.length < 1/4) {
-            alert(`Could not find a movie named ${movieTitle}!`)
-            movieTitle = undefined;
-          } else {
-            movieTitle = `${relevantTitles[titleIndex].title} (${relevantTitles[titleIndex].release_date.slice(0, 4)})`;
-            updatedMovies.push(movieTitle);
-          }
+          movieTitle = `${relevantTitles[titleIndex].title} (${relevantTitles[titleIndex].release_date.slice(0, 4)})`;
+          updatedMovies.push(movieTitle);
+          // if (movieTitle.length / relevantTitles[titleIndex].title.length < 1/4) {
+          //   alert(`Could not find a movie named ${movieTitle}!`)
+          //   movieTitle = undefined;
+          // } else {
+          //   movieTitle = `${relevantTitles[titleIndex].title} (${relevantTitles[titleIndex].release_date.slice(0, 4)})`;
+          //   updatedMovies.push(movieTitle);
+          // }
         }
 
         // if the stream does not already have the search term, update the stream to include it

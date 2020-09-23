@@ -36,7 +36,7 @@ app.post('/getTitle', function (req, res) {
 
 // this will get the cast of the searched movie
 app.post('/getCast', function (req, res) {
-  const searchTerm = req.body.data.toLowerCase();
+  let searchTerm = req.body.data.toLowerCase();
   axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${API.tmdbAPI}&query=${searchTerm}`)
     .then((data) => {
       console.log('searchTerm ', searchTerm);
@@ -48,10 +48,20 @@ app.post('/getCast', function (req, res) {
       });
       console.log('sorted movies ', sortedMovies);
       // only take the first four movies on the list because they will be the most relevant
-      const relevantTitles = filteredMovies.slice(0, 5).map(movie => movie.title.toLowerCase());
+      let relevantTitles = filteredMovies.slice(0, 5).map(movie => movie.title.toLowerCase());
       console.log('relevant titles ', relevantTitles);
+      // remove 'the' from search term if it's the first word
+      if (searchTerm.indexOf('the') === 0) {
+        searchTerm = searchTerm.slice(4);
+      };
+      relevantTitles = relevantTitles.map(function turnLowercase(movie) {
+        if (movie.indexOf('the') === 0) {
+          movie = movie.slice(4);
+        }
+        return movie;
+      })
+      console.log('Movies without the ', relevantTitles);
       // search for an exact match with the search term first
-      console.log('searchTerm ', searchTerm)
       let titleIndex = relevantTitles.indexOf(searchTerm);
       console.log('titleIndex ', titleIndex);
       // if there is no exact match, go with the first movie that tmdb suggests
