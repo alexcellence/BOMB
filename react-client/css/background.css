@@ -1,17 +1,4 @@
-#body {
-  height: 92vh;
-  width: 90vw;
-  margin: auto;
-  padding: 40px;
-  background: linear-gradient(to bottom, #4866e1, #ffc35d);
-}
-
-#app {
-  height: 100%;
-  width: 100%;
-}
-
-/* html {
+html {
   font: 5vmin/1.3 Serif;
   overflow: hidden;
   background: #123; }
@@ -76,4 +63,4 @@ html:first-line {
   from {
     transform: rotate(0deg) scale(12) translateX(-20px); }
   to {
-    transform: rotate(360deg) scale(18) translateX(20px); } } */
+    transform: rotate(360deg) scale(18) translateX(20px); } }
