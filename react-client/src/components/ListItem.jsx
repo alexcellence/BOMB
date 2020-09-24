@@ -1,9 +1,14 @@
 import React from 'react';
+import styled from 'styled-components';
+
+const ListElement = styled.li`
+  font-size: 20px;
+`
 
 const ListItem = (props) => (
-  <li>
+  <ListElement>
     <span>{props.value}</span>
-  </li>
+  </ListElement>
 )
 
 export default ListItem;

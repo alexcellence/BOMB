@@ -92,6 +92,7 @@ app.post('/filmography', function (req, res) {
       axios.get(`https://api.themoviedb.org/3/person/${actorID}/movie_credits?api_key=${API.tmdbAPI}&language=en-US`)
         .then((data) => {
           console.log('data ', data.data.cast);
+          console.log('filmography ', data.data.cast.map(movie => movie.title));
           res.status(200).send(data.data.cast)
         })
         .catch(() => console.log(`There was an error getting ${searchedActor}'s movie credits`))

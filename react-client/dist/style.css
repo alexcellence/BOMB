@@ -1,11 +1,37 @@
 #body {
-  height: 90vh;
+  height: 92vh;
   width: 90vw;
   margin: auto;
   padding: 40px;
+  background: linear-gradient(to bottom, #7927b2, #fb3182);
 }
 
 #app {
   height: 100%;
   width: 100%;
 }
+
+/* *{
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  font-family: 'Verdana', sans-serif;
+}
+html, body{
+  height: 100vh;
+  background: linear-gradient(to bottom, #7927b2, #fb3182);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.container{
+  width: 90%;
+  height: 400px;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 30px;
+  background: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+} */

@@ -24,6 +24,7 @@ const Title = styled.div`
   font-size: 65px;
   vertical-align: middle;
   margin: auto;
+  -webkit-text-stroke: 2px white;
 `
 
 const Streak = styled.div`
@@ -34,6 +35,7 @@ const Streak = styled.div`
   grid-column-end: 4;
   margin: auto;
   font-family: Circular, -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+  font-size: 20px;
 `
 
 const DefuseButton = styled.button`
@@ -56,6 +58,7 @@ const DefuseButton = styled.button`
     transform: translateY(2px);
   };
   cursor: pointer;
+  font-size: 20px;
 `
 
 const ActorPhoto = styled.img`
@@ -64,7 +67,16 @@ const ActorPhoto = styled.img`
   grid-row-start: 3;
   grid-row-end: 4;
   margin: auto;
+  width: 250px;
+  height: auto;
+
+  box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.4);
+  -moz-box-shadow: 10px 10px 5px rgba(0, 0, 0, 0.4);
+  -webkit-box-shadow: 10px 10px 5px rgba(0, 0, 0, 0.4);
+  -khtml-box-shadow: 10px 10px 5px rgba(0, 0, 0, 0.4);
 `
+
+// border: 1px solid #021a40;
 
 const MoviePoster = styled.img`
   grid-column-start: 3;
@@ -72,6 +84,13 @@ const MoviePoster = styled.img`
   grid-row-start: 3;
   grid-row-end: 4;
   margin: auto;
+  width: 250px;
+  height: auto;
+
+  box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.4);
+  -moz-box-shadow: 10px 10px 5px rgba(0, 0, 0, 0.4);
+  -webkit-box-shadow: 10px 10px 5px rgba(0, 0, 0, 0.4);
+  -khtml-box-shadow: 10px 10px 5px rgba(0, 0, 0, 0.4);
 `
 
 class App extends React.Component {
@@ -131,19 +150,31 @@ class App extends React.Component {
         };
         const filmographyFuse = new Fuse(this.state.filmography, options);
         let movieGuess = this.state.searchTerm.toLowerCase();
-        console.log('movie guess ', movieGuess);
-        let theIndex = movieGuess.indexOf('the');
-        console.log('the index ', movieGuess.indexOf('the'));
-        if (movieGuess.indexOf('the') === 0) {
-          movieGuess = movieGuess.replace('the', '');
+        console.log('Original movie search term ', movieGuess);
+
+        if (movieGuess.indexOf('the ') === 0) {
+          movieGuess = movieGuess.replace('the ', '');
         };
-        console.log('movie guess without the ', movieGuess);
 
         let movieResults = filmographyFuse.search(movieGuess);
         console.log('movieFuse results ', movieResults);
 
-        let movieTitles = movieResults.map(movie => movie.item);
+        // movie results sorted by refIndex
+        // let sortedMovieResults = movieResults.sort((a, b) => {
+        //   return b.refIndex - a.refIndex;
+        // });
+
+        // movie results sorted by score
+        let sortedMovieResults = movieResults.sort((a, b) => {
+          return a.score - b.score;
+        });
+        console.log('Movies sorted by Fuse score ', sortedMovieResults);
+
+        let movieTitles = sortedMovieResults.map(movie => movie.item);
         console.log('movieFuse results with only titles ', movieTitles);
+
+        // let movieTitles = movieResults.map(movie => movie.item);
+        // console.log('movieFuse results with only titles ', movieTitles);
 
         // iterate through this.state.movies and check whether any of the movies there are in movieResults
         for (var i = 0; i < this.state.movies.length; i++) {
@@ -159,7 +190,14 @@ class App extends React.Component {
 
         // let movieResultsTitles = movieResults.map(movie => movie.item.toLowerCase());
         let movieResultsTitles = movieTitles.map(movie => movie.toLowerCase());
-        console.log('Movie results titles ', movieResultsTitles);
+        console.log('Lowercase movie titles ', movieResultsTitles);
+
+        movieResultsTitles = movieResultsTitles.map(function (movie) {
+          if (movie.indexOf('the ') === 0) {
+            movie = movie.slice(4);
+          };
+          return movie;
+        })
 
         console.log('movieGuess ', movieGuess);
         let movieIndex = movieResultsTitles.indexOf(movieGuess);
@@ -168,26 +206,16 @@ class App extends React.Component {
           movieIndex = 0;
         }
         console.log('movie index', movieIndex);
-        // movie results sorted by refIndex
-        // let sortedMovieResults = movieResults.sort((a, b) => {
-        //   return a.refIndex - b.refIndex;
-        // });
-
-        // movie results sorted by score
-        let sortedMovieResults = movieResultsTitles.sort((a, b) => {
-          return a.score - b.score;
-        });
 
         for (var i = 0; i < sortedMovieResults.length; i++) {
           if (sortedMovieResults[i].score === 0) {
             movieIndex = i;
           }
         }
-        console.log('Movies sorted by refIndex ', sortedMovieResults);
 
         // change this back to movieResults if the sorted version doesn't work out
         if (movieResults.length > 0) {
-          const foundMovie = sortedMovieResults[movieIndex];
+          const foundMovie = movieTitles[movieIndex];
           // const foundMovie = movieResults[movieIndex].item;
           console.log('foundmovie ', foundMovie);
           this.setState({
@@ -306,6 +334,7 @@ class App extends React.Component {
         // let movieTitle = searchTerm;
 
         console.log(`Movie data when searching for ${movieTitle} `, data.data.results);
+        console.log(`Movie titles when searching for ${movieTitle} `, data.data.results.map(movie => movie.title));
 
         let relevantTitles = data.data.results.filter(movie => movie.vote_count > 500).slice(0, 5);
         console.log('Relevant titles ', relevantTitles);
@@ -319,14 +348,14 @@ class App extends React.Component {
         console.log('Sorted lowercase titles ', lowercaseTitles);
 
         lowercaseTitles = lowercaseTitles.map(function removeThe(movie) {
-          if (movie.indexOf('the') === 0) {
+          if (movie.indexOf('the ') === 0) {
             movie = movie.slice(4);
           };
           return movie;
         })
         console.log('Lowercase titles without the ', lowercaseTitles);
 
-        if (movieTitle.indexOf('the') === 0) {
+        if (movieTitle.indexOf('the ') === 0) {
           movieTitle = movieTitle.slice(4);
         };
         console.log('Movie title without the ', movieTitle);
@@ -406,7 +435,11 @@ class App extends React.Component {
       .then((data) => {
         let relevantFilmography = data.data.filter(movie => movie.vote_count > 500);
         console.log('Relevant filmography ', relevantFilmography);
-        let filmography = relevantFilmography.map(movie => movie.title)
+        let filmographyByDate = relevantFilmography.sort((a, b) => {
+          return new Date(b.release_date) - new Date(a.release_date);
+        })
+        console.log('filmographyByDate ', filmographyByDate);
+        let filmography = filmographyByDate.map(movie => movie.title)
         console.log(`${this.state.officialActor}'s filmography `, filmography)
         this.setState({
           filmography: filmography

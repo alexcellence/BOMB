@@ -9,6 +9,7 @@ const MovieStream = styled.ul`
   grid-row-end: 4;
   margin-left: auto;
   margin-right: auto;
+  padding-top: 30px;
 `
 
 const Stream = (props) => (
