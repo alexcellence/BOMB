@@ -172,7 +172,7 @@ class App extends React.Component {
         // let sortedMovieResults = movieResults.sort((a, b) => {
         //   return a.score - b.score;
         // });
-        console.log('Movies sorted by Fuse score ', sortedMovieResults);
+        console.log('Movies sorted by refIndex ', sortedMovieResults);
 
         // sortedMovieResults = sortedMovieResults.sort((a, b) => {
         //   if (a.score === b.score) {
