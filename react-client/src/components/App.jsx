@@ -164,15 +164,21 @@ class App extends React.Component {
         console.log('movieFuse results ', movieResults);
 
         // movie results sorted by refIndex
-        // let sortedMovieResults = movieResults.sort((a, b) => {
-        //   return b.refIndex - a.refIndex;
-        // });
+        let sortedMovieResults = movieResults.sort((a, b) => {
+          return b.refIndex - a.refIndex;
+        });
 
         // movie results sorted by score
-        let sortedMovieResults = movieResults.sort((a, b) => {
-          return a.score - b.score;
-        });
+        // let sortedMovieResults = movieResults.sort((a, b) => {
+        //   return a.score - b.score;
+        // });
         console.log('Movies sorted by Fuse score ', sortedMovieResults);
+
+        // sortedMovieResults = sortedMovieResults.sort((a, b) => {
+        //   if (a.score === b.score) {
+        //     return b.refIndex - a.refIndex;
+        //   };
+        // });
 
         let movieTitles = sortedMovieResults.map(movie => movie.item);
         console.log('movieFuse results with only titles ', movieTitles);
@@ -205,6 +211,16 @@ class App extends React.Component {
 
         console.log('movieGuess ', movieGuess);
         let movieIndex = movieResultsTitles.indexOf(movieGuess);
+
+        let movieTitleAnd;
+
+        if (movieGuess.indexOf('and') > -1) {
+          movieTitleAnd = movieGuess.replace('and', '&');
+        };
+        console.log('Movie title with ampersand ', movieTitleAnd);
+        if (movieIndex === -1) {
+          movieIndex = movieResultsTitles.indexOf(movieTitleAnd);
+        }
 
         if (movieIndex === -1) {
           movieIndex = 0;
@@ -364,8 +380,20 @@ class App extends React.Component {
         };
         console.log('Movie title without the ', movieTitle);
 
+        let movieTitleAnd;
+
+        if (movieTitle.indexOf('and') > -1) {
+          movieTitleAnd = movieTitle.replace('and', '&');
+        };
+        console.log('Movie title with ampersand ', movieTitleAnd);
+
         let titleIndex = lowercaseTitles.indexOf(movieTitle);
-        console.log('Title index (is there an exact match?) ', titleIndex);
+        console.log('This is the title index after trying original title ', titleIndex);
+
+        if (titleIndex === -1) {
+          titleIndex = lowercaseTitles.indexOf(movieTitleAnd);
+        }
+        console.log('Title index after inserting ampersand ', titleIndex);
 
         if (titleIndex > -1 && titleIndex <= 4) {
           if (movieTitle.length / relevantTitles[titleIndex].title.length < 1/4) {

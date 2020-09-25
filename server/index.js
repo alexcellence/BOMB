@@ -21,9 +21,17 @@ app.use((req, res, next) => {
 // this will get movie results for searched title
 app.post('/getTitle', function (req, res) {
   // this is the contents of the React form when submit is clicked
-  const searchTerm = req.body.data;
+  let searchTerm = req.body.data;
+  console.log('This is the search term when looking for a movie title ', searchTerm);
+  let uriEncoded = encodeURI(searchTerm);
+  console.log('This is the search term with URI encoding ', uriEncoded);
+  let spaces = /\s/gi;
+  let replaced = searchTerm.replace(spaces, '%20');
+  let ampersand = /&/gi;
+  replaced = replaced.replace(ampersand, '%26');
+  console.log('This is the search term with the new symbols ', replaced);
   // this searches the movie db using my private API key and the search term that was entered into the form
-  axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${API.tmdbAPI}&query=${searchTerm}`)
+  axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${API.tmdbAPI}&language=en-US&query=${replaced}&page=1&include_adult=false`)
     .then((data) => {
       // send back all the search results for that movie title
       res.status(200).send(data.data);
@@ -37,16 +45,23 @@ app.post('/getTitle', function (req, res) {
 // this will get the cast of the searched movie
 app.post('/getCast', function (req, res) {
   let searchTerm = req.body.data.toLowerCase();
-  axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${API.tmdbAPI}&query=${searchTerm}`)
+  let spaces = /\s/gi;
+  let replaced = searchTerm.replace(spaces, '%20');
+  let ampersand = /&/gi;
+  replaced = replaced.replace(ampersand, '%26');
+  console.log('This is the search term with the new symbols ', replaced);
+  axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${API.tmdbAPI}&language=en-US&query=${replaced}&page=1&include_adult=false`)
     .then((data) => {
       console.log('searchTerm ', searchTerm);
       // filter list to only include movies with a vote count over 350 to weed out unpopular titles that share the same name then take only the first four on the list
+      console.log('Movie titles when searching for cast ', data.data.results.map(movie => movie.title));
+
       const filteredMovies = data.data.results.filter(movie => movie.vote_count > 500).slice(0, 5);
-      console.log(filteredMovies);
+      // console.log(filteredMovies);
       const sortedMovies = filteredMovies.sort((a, b) => {
         return moment(a.release_date).diff(b.release_date);
       });
-      console.log('sorted movies ', sortedMovies);
+      console.log('sorted movies ', sortedMovies.map(movie => movie.title));
       // only take the first four movies on the list because they will be the most relevant
       let relevantTitles = filteredMovies.slice(0, 5).map(movie => movie.title.toLowerCase());
       console.log('relevant titles ', relevantTitles);
