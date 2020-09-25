@@ -7,6 +7,7 @@ const Input = styled.div`
   grid-column-start: 2;
   grid-column-end: 3;
   text-align: center;
+  z-index: 2000;
 `
 
 const Submit = styled.input`
@@ -23,6 +24,8 @@ const Submit = styled.input`
   };
   cursor: pointer;
   font-size: 20px;
+  padding-left: 15px;
+  padding-right: 15px;
 `
 
 const Label = styled.label`

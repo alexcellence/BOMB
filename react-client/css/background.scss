@@ -59,27 +59,6 @@ head::after {
   animation-delay: -19s;
 }
 
-html::before {
-  content: 'DeLight\A A CSS DEMO';
-  letter-spacing: .5em;
-  text-shadow: 0 0 5px #000;
-  white-space: pre;
-  color: #fff;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  z-index: 1;
-  transform: translate(-50%,-50%);
-  text-align: center;
-  color: #999;
-}
-
-html:first-line {
-  font-size: 300%;
-  font-style: italic;
-  letter-spacing: 0;
-  color: #fff;
-}
 
 @keyframes move {
   from {

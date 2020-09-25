@@ -10,10 +10,11 @@ import styled from 'styled-components';
 const Container = styled.div`
   display: grid;
   grid-template-columns: 25% 50% 25%;
-  grid-template-rows: 10% 10% 60% 20%;
+  grid-template-rows: 10% 20% 70%;
   width: 100%;
   height: 100%;
   justify-content: center;
+  z-index: 2000;
 `
 
 const Title = styled.div`
@@ -36,6 +37,7 @@ const Streak = styled.div`
   margin: auto;
   font-family: Circular, -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
   font-size: 20px;
+  z-index: 2000;
 `
 
 const DefuseButton = styled.button`
@@ -59,6 +61,8 @@ const DefuseButton = styled.button`
   };
   cursor: pointer;
   font-size: 20px;
+  padding-left: 15px;
+  padding-right: 16px;
 `
 
 const ActorPhoto = styled.img`
@@ -143,12 +147,12 @@ class App extends React.Component {
     if (this.state.movieTurn) {
       let scores = [...this.state.totalScores];
       if (this.state.movies.length > 0) {
-        const options = {
+        const MovieOptions = {
           includeScore: true,
           threshold: 0.3,
           includeMatches: true
         };
-        const filmographyFuse = new Fuse(this.state.filmography, options);
+        const filmographyFuse = new Fuse(this.state.filmography, MovieOptions);
         let movieGuess = this.state.searchTerm.toLowerCase();
         console.log('Original movie search term ', movieGuess);
 
