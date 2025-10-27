@@ -1,101 +1,15 @@
 import React from 'react';
-import axios from 'axios';
 import Form from './Form.jsx';
 import Stream from './Stream.jsx';
 import ListItem from './ListItem.jsx';
-import moment from 'moment';
+import MovieSelector from './MovieSelector.jsx';
 import styles from './app.scss';
-import styled from 'styled-components';
 
-const Container = styled.div`
-  display: grid;
-  grid-template-columns: 25% 50% 25%;
-  grid-template-rows: 10% 20% 70%;
-  width: 100%;
-  height: 100%;
-  justify-content: center;
-  z-index: 2000;
-`
-
-const Title = styled.div`
-  grid-column-start: 2;
-  grid-column-end: 3;
-  text-align: center;
-  font-family: 'Luckiest Guy', cursive;
-  font-size: 65px;
-  vertical-align: middle;
-  margin: auto;
-  -webkit-text-stroke: 2px white;
-`
-
-const Streak = styled.div`
-  text-align: center;
-  grid-row-start: 2;
-  grid-row-end: 3;
-  grid-column-start: 3;
-  grid-column-end: 4;
-  margin: auto;
-  font-family: Circular, -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
-  font-size: 20px;
-  z-index: 2000;
-`
-
-const DefuseButton = styled.button`
-  grid-column-start: 1;
-  grid-column-end: 2;
-  grid-row-start: 2;
-  grid-row-end: 3;
-  height: 30px;
-  width: 90px;
-  margin: auto;
-  border-radius: 8px;
-  font-family: Circular, -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
-  border-width: 1px;
-  border-style: solid;
-  outline: none;
-  &:hover{
-    background-color: #D8D8D8;
-  };
-  &:active{
-    transform: translateY(2px);
-  };
-  cursor: pointer;
-  font-size: 20px;
-  padding-left: 15px;
-  padding-right: 16px;
-`
-
-const ActorPhoto = styled.img`
-  grid-column-start: 1;
-  grid-column-end: 2;
-  grid-row-start: 3;
-  grid-row-end: 4;
-  margin: auto;
-  width: 250px;
-  height: auto;
-
-  box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.4);
-  -moz-box-shadow: 10px 10px 5px rgba(0, 0, 0, 0.4);
-  -webkit-box-shadow: 10px 10px 5px rgba(0, 0, 0, 0.4);
-  -khtml-box-shadow: 10px 10px 5px rgba(0, 0, 0, 0.4);
-`
-
-// border: 1px solid #021a40;
-
-const MoviePoster = styled.img`
-  grid-column-start: 3;
-  grid-column-end: 4;
-  grid-row-start: 3;
-  grid-row-end: 4;
-  margin: auto;
-  width: 250px;
-  height: auto;
-
-  box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.4);
-  -moz-box-shadow: 10px 10px 5px rgba(0, 0, 0, 0.4);
-  -webkit-box-shadow: 10px 10px 5px rgba(0, 0, 0, 0.4);
-  -khtml-box-shadow: 10px 10px 5px rgba(0, 0, 0, 0.4);
-`
+// Imports from new modular files
+import { Container, Title, Streak, DefuseButton, ActorPhoto, MoviePoster } from './AppStyles.jsx';
+import { searchTitle, getCast, getFilmography, getActorImage } from '../services/apiService.js';
+import { processMovieSearchResults, processMovieSearchResultsForSelection, isUniqueMovie, validateMovieInFilmography } from '../utils/movieUtils.js';
+import { normalizeActorName, processFilmographyResults, findMatchingMovieInFilmography } from '../utils/actorUtils.js';
 
 class App extends React.Component {
   constructor(props) {
@@ -113,7 +27,9 @@ class App extends React.Component {
       moviePoster: '',
       turnsThisRound: 0,
       totalScores: [],
-      highScore: 0
+      highScore: 0,
+      showMovieSelector: false,
+      movieOptions: []
     }
 
     this.handleChange = this.handleChange.bind(this);
@@ -123,6 +39,8 @@ class App extends React.Component {
     this.clearStream = this.clearStream.bind(this);
     this.getActorImage = this.getActorImage.bind(this);
     this.handleEmptySubmit = this.handleEmptySubmit.bind(this);
+    this.getCast = this.getCast.bind(this);
+    this.handleMovieSelection = this.handleMovieSelection.bind(this);
   }
 
   handleChange(event) {
@@ -147,102 +65,38 @@ class App extends React.Component {
     if (this.state.movieTurn) {
       let scores = [...this.state.totalScores];
       if (this.state.movies.length > 0) {
-        const MovieOptions = {
-          includeScore: true,
-          threshold: 0.3,
-          includeMatches: true
-        };
-        const filmographyFuse = new Fuse(this.state.filmography, MovieOptions);
-        let movieGuess = this.state.searchTerm.toLowerCase();
-        console.log('Original movie search term ', movieGuess);
+        // Game is in progress - checking if movie is in actor's filmography
+        const { movieIndex, movieTitles, movieResults, selectedMovie } = findMatchingMovieInFilmography(
+          this.state.searchTerm,
+          this.state.filmography,
+          this.state.movies
+        );
 
-        if (movieGuess.indexOf('the ') === 0) {
-          movieGuess = movieGuess.replace('the ', '');
-        };
-
-        let movieResults = filmographyFuse.search(movieGuess);
-        console.log('movieFuse results ', movieResults);
-
-        // movie results sorted by refIndex
-        let sortedMovieResults = movieResults.sort((a, b) => {
-          return b.refIndex - a.refIndex;
-        });
-
-        // movie results sorted by score
-        // let sortedMovieResults = movieResults.sort((a, b) => {
-        //   return a.score - b.score;
-        // });
-        console.log('Movies sorted by refIndex ', sortedMovieResults);
-
-        // sortedMovieResults = sortedMovieResults.sort((a, b) => {
-        //   if (a.score === b.score) {
-        //     return b.refIndex - a.refIndex;
-        //   };
-        // });
-
-        let movieTitles = sortedMovieResults.map(movie => movie.item);
-        console.log('movieFuse results with only titles ', movieTitles);
-
-        // let movieTitles = movieResults.map(movie => movie.item);
-        // console.log('movieFuse results with only titles ', movieTitles);
-
-        // iterate through this.state.movies and check whether any of the movies there are in movieResults
-        for (var i = 0; i < this.state.movies.length; i++) {
-          for (var j = 0; j < movieTitles.length; j++) {
-            var currentMovie = this.state.movies[i];
-            console.log('currentMovie without year ', currentMovie.slice(0, currentMovie.length - 7));
-            if (currentMovie.slice(0, currentMovie.length - 7) === movieTitles[j]) {
-              movieTitles.splice(j, 1);
-            }
-          }
-        }
-        console.log('movieTitles without previous results ', movieTitles);
-
-        // let movieResultsTitles = movieResults.map(movie => movie.item.toLowerCase());
-        let movieResultsTitles = movieTitles.map(movie => movie.toLowerCase());
-        console.log('Lowercase movie titles ', movieResultsTitles);
-
-        movieResultsTitles = movieResultsTitles.map(function (movie) {
-          if (movie.indexOf('the ') === 0) {
-            movie = movie.slice(4);
-          };
-          return movie;
-        })
-
-        console.log('movieGuess ', movieGuess);
-        let movieIndex = movieResultsTitles.indexOf(movieGuess);
-
-        let movieTitleAnd;
-
-        if (movieGuess.indexOf('and') > -1) {
-          movieTitleAnd = movieGuess.replace('and', '&');
-        };
-        console.log('Movie title with ampersand ', movieTitleAnd);
-        if (movieIndex === -1) {
-          movieIndex = movieResultsTitles.indexOf(movieTitleAnd);
-        }
-
-        if (movieIndex === -1) {
-          movieIndex = 0;
-        }
-        console.log('movie index', movieIndex);
-
-        for (var i = 0; i < sortedMovieResults.length; i++) {
-          if (sortedMovieResults[i].score === 0) {
-            movieIndex = i;
-          }
-        }
-
-        // change this back to movieResults if the sorted version doesn't work out
         if (movieResults.length > 0) {
-          const foundMovie = movieTitles[movieIndex];
-          // const foundMovie = movieResults[movieIndex].item;
-          console.log('foundmovie ', foundMovie);
-          this.setState({
-            officialTitle: foundMovie
-          })
-          this.getTitle(foundMovie);
-          this.getCast(foundMovie);
+          // First search for the movie title to get full movie details
+          searchTitle(this.state.searchTerm)
+            .then((data) => {
+              const result = processMovieSearchResults(data, this.state.searchTerm);
+
+              if (!result) {
+                alert(`Could not find a movie named ${this.state.searchTerm}!`);
+                return;
+              }
+
+              // Use the movie from filmography, not the search result
+              // This ensures we get the correct version (e.g., "Grown Ups" vs "Grown Ups 2")
+              const foundMovie = movieTitles[movieIndex];
+              console.log('foundmovie from filmography ', foundMovie);
+
+              this.setState({
+                officialTitle: foundMovie
+              })
+              this.getTitle(foundMovie);
+              this.getCast(foundMovie);
+            })
+            .catch(() => {
+              alert(`Could not find a movie named ${this.state.searchTerm}!`);
+            });
         } else {
           alert(`${this.state.officialActor} is not credited in ${this.state.searchTerm}!`);
           updatedStream.unshift('BOMB!');
@@ -257,37 +111,36 @@ class App extends React.Component {
           })
         }
       } else {
-        // submit a get request with the movie search
+        // First movie search - submit a get request with the movie search
         this.getTitle(this.state.searchTerm);
         this.getCast(this.state.searchTerm);
       }
     } else {
+      // Actor turn
       let scores = [...this.state.totalScores];
-      // time to submit an actor
       const options = {
         includeScore: true,
         threshold: 0.43
       };
       let fuse = new Fuse(this.state.cast, options);
-      let searchedActor = this.state.searchTerm;
-      if (searchedActor === 'the rock' || searchedActor === 'rock') {
-        searchedActor = 'Dwayne Johnson'
-      }
+      let searchedActor = normalizeActorName(this.state.searchTerm);
+
       console.log('This is the actor that was searched for ', searchedActor);
       let actorResults = fuse.search(searchedActor);
       console.log('actor results ', actorResults);
-      let sortedActorResults = fuse.search(searchedActor).sort((a, b) => {
+      let sortedActorResults = actorResults.sort((a, b) => {
         return a.refIndex - b.refIndex;
       });
-      console.log('sortedActorResults ', sortedActorResults)
+      console.log('sortedActorResults ', sortedActorResults);
+
       let actorIndex = 0;
       for (let i = 0; i < sortedActorResults.length; i++) {
         if (sortedActorResults[i].score === 0) {
           actorIndex = i;
         }
       }
+
       if (actorResults.length > 0) {
-        // let foundActor = fuse.search(this.state.searchTerm)[0].item;
         let foundActor = sortedActorResults[actorIndex].item;
         updatedStream.unshift(foundActor);
         this.setState({
@@ -316,7 +169,6 @@ class App extends React.Component {
       }
     }
     this.setState({
-      // search term is tied to the input box, so clear it
       searchTerm: ''
     })
   }
@@ -330,109 +182,88 @@ class App extends React.Component {
       cast: [],
       officialTitle: '',
       moviePoster: '',
-      actorPhoto: ''
+      actorPhoto: '',
+      showMovieSelector: false,
+      movieOptions: []
     })
+  }
+
+  handleMovieSelection(selectedMovie) {
+    let updatedMovies = [...this.state.movies];
+    let updatedStream = [...this.state.stream];
+
+    const movieTitle = selectedMovie.fullTitle;
+
+    // Validate movie is unique
+    if (!isUniqueMovie(movieTitle, this.state.movies)) {
+      alert('Cannot use the same movie twice in one round!');
+      this.setState({
+        showMovieSelector: false,
+        movieOptions: []
+      });
+      return;
+    }
+
+    updatedStream.unshift(movieTitle);
+    updatedMovies.push(movieTitle);
+
+    this.setState({
+      turnsThisRound: this.state.turnsThisRound + 1,
+      highScore: Math.max(this.state.turnsThisRound + 1, ...this.state.totalScores),
+      officialTitle: movieTitle,
+      movies: updatedMovies,
+      stream: updatedStream,
+      movieTurn: !this.state.movieTurn,
+      moviePoster: selectedMovie.posterPath,
+      actorPhoto: '',
+      showMovieSelector: false,
+      movieOptions: []
+    });
   }
 
   getTitle(searchTerm) {
     if (searchTerm === undefined) {
       alert('Please provide a valid movie title!');
+      return;
     }
-    axios.post('/getTitle', {
-      data: searchTerm
-    })
+
+    searchTitle(searchTerm)
       .then((data) => {
-        const options = {
-          includeScore: true,
-          threshold: 0.2
-        };
+        // Check for multiple matches (only on first movie search)
+        if (this.state.movies.length === 0) {
+          const selectionResult = processMovieSearchResultsForSelection(data, searchTerm);
 
-        let updatedMovies = [...this.state.movies];
-        let updatedStream = [...this.state.stream];
-
-        let movieTitle = searchTerm.toLowerCase();
-        // let movieTitle = searchTerm;
-
-        console.log(`Movie data when searching for ${movieTitle} `, data.data.results);
-        console.log(`Movie titles when searching for ${movieTitle} `, data.data.results.map(movie => movie.title));
-
-        let relevantTitles = data.data.results.filter(movie => movie.vote_count > 500).slice(0, 5);
-        console.log('Relevant titles ', relevantTitles);
-
-        const sortedMovies = relevantTitles.sort((a, b) => {
-          return moment(a.release_date).diff(b.release_date);
-        });
-        console.log('Sorted titles ', sortedMovies);
-
-        let lowercaseTitles = relevantTitles.map(movie => movie.title.toLowerCase());
-        console.log('Sorted lowercase titles ', lowercaseTitles);
-
-        lowercaseTitles = lowercaseTitles.map(function removeThe(movie) {
-          if (movie.indexOf('the ') === 0) {
-            movie = movie.slice(4);
-          };
-          return movie;
-        })
-        console.log('Lowercase titles without the ', lowercaseTitles);
-
-        if (movieTitle.indexOf('the ') === 0) {
-          movieTitle = movieTitle.slice(4);
-        };
-        console.log('Movie title without the ', movieTitle);
-
-        let movieTitleAnd;
-
-        if (movieTitle.indexOf('and') > -1) {
-          movieTitleAnd = movieTitle.replace('and', '&');
-        };
-        console.log('Movie title with ampersand ', movieTitleAnd);
-
-        let titleIndex = lowercaseTitles.indexOf(movieTitle);
-        console.log('This is the title index after trying original title ', titleIndex);
-
-        if (titleIndex === -1) {
-          titleIndex = lowercaseTitles.indexOf(movieTitleAnd);
-        }
-        console.log('Title index after inserting ampersand ', titleIndex);
-
-        if (titleIndex > -1 && titleIndex <= 4) {
-          if (movieTitle.length / relevantTitles[titleIndex].title.length < 1/4) {
-            alert(`Could not find a movie named ${movieTitle}!`)
-            movieTitle = undefined;
+          if (selectionResult.hasMultipleMatches) {
+            this.setState({
+              showMovieSelector: true,
+              movieOptions: selectionResult.movies
+            });
+            return;
           } else {
-            movieTitle = `${relevantTitles[titleIndex].title} (${relevantTitles[titleIndex].release_date.slice(0, 4)})`;
-            updatedMovies.push(movieTitle);
+            // Check if no movie was found
+            if (!selectionResult.movieTitle) {
+              alert(`Could not find a movie named ${searchTerm}!`);
+              return;
+            }
+
+            // Single match - process normally
+            const result = {
+              movieTitle: selectionResult.movieTitle,
+              posterPath: selectionResult.posterPath
+            };
+            this.processMovieResult(result);
+            return;
           }
-        } else {
-          titleIndex = 0;
-          movieTitle = `${relevantTitles[titleIndex].title} (${relevantTitles[titleIndex].release_date.slice(0, 4)})`;
-          updatedMovies.push(movieTitle);
-          // if (movieTitle.length / relevantTitles[titleIndex].title.length < 1/4) {
-          //   alert(`Could not find a movie named ${movieTitle}!`)
-          //   movieTitle = undefined;
-          // } else {
-          //   movieTitle = `${relevantTitles[titleIndex].title} (${relevantTitles[titleIndex].release_date.slice(0, 4)})`;
-          //   updatedMovies.push(movieTitle);
-          // }
         }
 
-        // if the stream does not already have the search term, update the stream to include it
-        if (!this.state.movies.includes(movieTitle) && movieTitle !== undefined) {
-          updatedStream.unshift(movieTitle);
-          this.setState({
-            turnsThisRound: this.state.turnsThisRound + 1,
-            highScore: Math.max(this.state.turnsThisRound + 1, ...this.state.totalScores),
-            officialTitle: movieTitle,
-            movies: updatedMovies,
-            stream: updatedStream,
-            // we only switch the turns if a valid movie title was returned
-            movieTurn: !this.state.movieTurn,
-            moviePoster: relevantTitles[titleIndex].poster_path,
-            actorPhoto: ''
-          })
-        } else {
-          alert('Cannot use the same movie twice in one round!');
+        // For subsequent movies in a round, use normal processing
+        const result = processMovieSearchResults(data, searchTerm);
+
+        if (!result) {
+          return; // Process failed
         }
+
+        this.processMovieResult(result);
       })
       .catch(() => {
         console.log('There was an error getting a movie title');
@@ -443,13 +274,39 @@ class App extends React.Component {
       })
   }
 
+  processMovieResult(result) {
+    let updatedMovies = [...this.state.movies];
+    let updatedStream = [...this.state.stream];
+
+    const { movieTitle, posterPath } = result;
+
+    // Validate movie is unique
+    if (!isUniqueMovie(movieTitle, this.state.movies)) {
+      alert('Cannot use the same movie twice in one round!');
+      return;
+    }
+
+    updatedStream.unshift(movieTitle);
+    updatedMovies.push(movieTitle);
+
+    this.setState({
+      turnsThisRound: this.state.turnsThisRound + 1,
+      highScore: Math.max(this.state.turnsThisRound + 1, ...this.state.totalScores),
+      officialTitle: movieTitle,
+      movies: updatedMovies,
+      stream: updatedStream,
+      movieTurn: !this.state.movieTurn,
+      moviePoster: posterPath,
+      actorPhoto: ''
+    });
+  }
+
   getCast(searchTerm) {
     if (searchTerm === undefined) {
       return;
     }
-    axios.post('/getCast', {
-      data: searchTerm
-    })
+
+    getCast(searchTerm)
       .then((data) => {
         const cast = data.data.map(person => person.name);
         console.log(`${this.state.officialTitle}'s cast `, cast)
@@ -461,18 +318,10 @@ class App extends React.Component {
   }
 
   getFilmography(actor) {
-    axios.post('/filmography', {
-      data: actor
-    })
+    getFilmography(actor)
       .then((data) => {
-        let relevantFilmography = data.data.filter(movie => movie.vote_count > 500);
-        console.log('Relevant filmography ', relevantFilmography);
-        let filmographyByDate = relevantFilmography.sort((a, b) => {
-          return new Date(b.release_date) - new Date(a.release_date);
-        })
-        console.log('filmographyByDate ', filmographyByDate);
-        let filmography = filmographyByDate.map(movie => movie.title)
-        console.log(`${this.state.officialActor}'s filmography `, filmography)
+        const filmography = processFilmographyResults(data);
+        console.log(`${actor}'s filmography `, filmography)
         this.setState({
           filmography: filmography
         })
@@ -481,9 +330,7 @@ class App extends React.Component {
   }
 
   getActorImage(actor) {
-    axios.post('/images', {
-      data: actor
-    })
+    getActorImage(actor)
       .then((data) => {
         console.log(`This is the image data for ${actor} `, data.data);
         this.setState({
@@ -503,7 +350,11 @@ class App extends React.Component {
         <Streak>Current streak: {this.state.turnsThisRound}<br></br>High score: {this.state.highScore}</Streak>
         <DefuseButton onClick={this.clearStream}>Defuse</DefuseButton>
         {this.state.actorPhoto ? <ActorPhoto src={`https://image.tmdb.org/t/p/w185${this.state.actorPhoto}`}></ActorPhoto> : null}
-        <Form turn={this.state.movieTurn} searchTerm={this.state.searchTerm} handleChange={this.handleChange} handleSubmit={this.handleSubmit} handleEmptySubmit={this.handleEmptySubmit}/>
+        {this.state.showMovieSelector ? (
+          <MovieSelector movies={this.state.movieOptions} onSelect={this.handleMovieSelection} />
+        ) : (
+          <Form turn={this.state.movieTurn} searchTerm={this.state.searchTerm} handleChange={this.handleChange} handleSubmit={this.handleSubmit} handleEmptySubmit={this.handleEmptySubmit} officialActor={this.state.officialActor}/>
+        )}
         <Stream stream={this.state.stream} className={styles.stream}/>
         {this.state.moviePoster ? <MoviePoster src={`https://image.tmdb.org/t/p/w185${this.state.moviePoster}`}></MoviePoster> : null}
       </Container>

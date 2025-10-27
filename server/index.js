@@ -18,6 +18,11 @@ app.use((req, res, next) => {
   next();
 })
 
+// Serve the index.html for the React app
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../react-client/dist/index.html'));
+});
+
 // this will get movie results for searched title
 app.post('/getTitle', function (req, res) {
   // this is the contents of the React form when submit is clicked

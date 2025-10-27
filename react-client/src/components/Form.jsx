@@ -69,7 +69,7 @@ const Form = (props) => (
     {/* <form onSubmit={props.handleSubmit}> */}
     <form onSubmit={props.searchTerm === '' ? props.handleEmptySubmit : props.handleSubmit}>
       <Label>
-        {props.turn ? <Instructions>Please pick a movie!</Instructions> : <Instructions>Name an actor in that movie!</Instructions>}
+        {props.turn ? <Instructions>{props.officialActor ? `Please pick a movie that ${props.officialActor} was in!` : 'Please pick a movie!'}</Instructions> : <Instructions>Name an actor in that movie!</Instructions>}
         <SubmissionBox type="text" name="currentMovie" value={props.searchTerm} onChange={props.handleChange} />
       </Label>
       <Submit type="submit" value="Submit" />
