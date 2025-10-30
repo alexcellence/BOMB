@@ -9,6 +9,9 @@ const Input = styled.div`
   text-align: center;
   z-index: 2000;
   margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 `
 
 const Submit = styled.input`
@@ -44,6 +47,7 @@ const SubmissionBox = styled.input`
 
 
   width: 60%;
+  max-width: 720px;
   height: 50px;
   position: relative;
   padding: 0px 16px;
@@ -69,6 +73,9 @@ const SubmissionBox = styled.input`
 
 const Instructions = styled.p`
   font-size: 20px;
+  margin: 0 0 12px 0;
+  max-width: 900px;
+  word-break: break-word;
 `
 
 const Form = (props) => (
