@@ -9,7 +9,7 @@ import styles from './app.scss';
 import { Container, Title, Streak, DefuseButton, ActorPhoto, MoviePoster } from './AppStyles.jsx';
 import { searchTitle, getCast, getFilmography, getActorImage, getCastById } from '../services/apiService.js';
 import { processMovieSearchResults, processMovieSearchResultsForSelection, isUniqueMovie, validateMovieInFilmography } from '../utils/movieUtils.js';
-import { normalizeActorName, processFilmographyResults, findMatchingMovieInFilmography } from '../utils/actorUtils.js';
+import { normalizeActorName, processFilmographyResults, findMatchingMovieInFilmography, isAcceptableActorMatch } from '../utils/actorUtils.js';
 
 class App extends React.Component {
   constructor(props) {
@@ -120,61 +120,35 @@ class App extends React.Component {
       let scores = [...this.state.totalScores];
       const options = {
         includeScore: true,
-        threshold: 0.6,  // Increased threshold to allow partial matches (was 0.43)
-        findAllMatches: true  // Find all matches, not just the best
+        threshold: 0.35, // stricter matching
+        ignoreLocation: true,
+        minMatchCharLength: 2,
+        findAllMatches: true
       };
       let fuse = new Fuse(this.state.cast, options);
-      let searchedActor = normalizeActorName(this.state.searchTerm);
+      let searchedActor = normalizeActorName(this.state.searchTerm).trim();
 
       console.log('This is the actor that was searched for ', searchedActor);
       let actorResults = fuse.search(searchedActor);
       console.log('actor results ', actorResults);
 
-      // Sort by score (lower is better) and also check for first/last name matches
-      let sortedActorResults = actorResults.sort((a, b) => {
-        // Perfect match (score 0) comes first
-        if (a.score === 0 && b.score !== 0) return -1;
-        if (b.score === 0 && a.score !== 0) return 1;
-        // Otherwise sort by score
-        return a.score - b.score;
-      });
-      console.log('sortedActorResults ', sortedActorResults);
-
-      // Check if search term matches a first or last name in the cast
-      let actorIndex = -1;
-      const searchLower = searchedActor.toLowerCase();
-
-      // First check for exact matches (score = 0)
-      for (let i = 0; i < sortedActorResults.length; i++) {
-        if (sortedActorResults[i].score === 0) {
-          actorIndex = i;
-          console.log('Found exact match at index', i);
-          break;
+      // Prefer exact full-name match
+      const exactIndex = this.state.cast.findIndex(name => name.toLowerCase() === searchedActor.toLowerCase());
+      let foundActor = null;
+      if (exactIndex !== -1) {
+        foundActor = this.state.cast[exactIndex];
+      } else {
+        // Filter fuzzy results with score guard and token rules
+        const acceptable = actorResults
+          .filter(r => (r.score !== undefined ? r.score <= 0.25 : false))
+          .map(r => r.item)
+          .filter(candidate => isAcceptableActorMatch(searchedActor, candidate));
+        if (acceptable.length > 0) {
+          foundActor = acceptable[0];
         }
       }
 
-      // If no exact match, check if search term matches any last name
-      if (actorIndex === -1) {
-        for (let i = 0; i < sortedActorResults.length; i++) {
-          const actorName = sortedActorResults[i].item.toLowerCase();
-          const nameParts = actorName.split(' ');
-          // Check if search term exactly matches any name part (first or last name)
-          if (nameParts.some(part => part === searchLower)) {
-            actorIndex = i;
-            console.log('Found exact name match at index', i, 'for actor', sortedActorResults[i].item);
-            break;
-          }
-        }
-      }
-
-      // If still no match, fall back to best fuzzy match (index 0)
-      if (actorIndex === -1) {
-        actorIndex = 0;
-        console.log('Using best fuzzy match (index 0)');
-      }
-
-      if (actorResults.length > 0) {
-        let foundActor = sortedActorResults[actorIndex].item;
+      if (foundActor) {
         updatedStream.unshift(foundActor);
         this.setState({
           turnsThisRound: this.state.turnsThisRound + 1,
