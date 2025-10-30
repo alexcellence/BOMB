@@ -213,6 +213,7 @@ class App extends React.Component {
       movies: [],
       movieTurn: true,
       cast: [],
+      officialActor: '',
       officialTitle: '',
       moviePoster: '',
       actorPhoto: '',
