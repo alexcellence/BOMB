@@ -92,7 +92,12 @@ class App extends React.Component {
                 officialTitle: foundMovie
               })
               this.getTitle(foundMovie);
-              this.getCast(foundMovie);
+              // Fetch cast by exact movie ID from filmography to avoid year/title ambiguities
+              if (selectedMovie && selectedMovie.id) {
+                this.getCastById(selectedMovie.id);
+              } else {
+                this.getCast(foundMovie);
+              }
             })
             .catch(() => {
               alert(`Could not find a movie named ${this.state.searchTerm}!`);
