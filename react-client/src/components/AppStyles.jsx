@@ -3,11 +3,17 @@ import styled from 'styled-components';
 export const Container = styled.div`
   display: grid;
   grid-template-columns: 25% 50% 25%;
-  grid-template-rows: 10% 20% 70%;
+  grid-template-rows: auto auto 1fr;
   width: 100%;
-  height: 100%;
+  height: 100vh;
   justify-content: center;
   z-index: 2000;
+  row-gap: 16px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 5% 90% 5%;
+    row-gap: 12px;
+  }
 `;
 
 export const Title = styled.div`
@@ -19,6 +25,10 @@ export const Title = styled.div`
   vertical-align: middle;
   margin: auto;
   -webkit-text-stroke: 2px white;
+
+  @media (max-width: 768px) {
+    font-size: 42px;
+  }
 `;
 
 export const Streak = styled.div`

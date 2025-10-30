@@ -73,7 +73,8 @@ export const processMovieSearchResults = (data, searchTerm) => {
 
   return {
     movieTitle,
-    posterPath: relevantTitles[Math.max(0, Math.min(titleIndex, 4))].poster_path
+    posterPath: relevantTitles[Math.max(0, Math.min(titleIndex, 4))].poster_path,
+    id: relevantTitles[Math.max(0, Math.min(titleIndex, 4))].id
   };
 };
 
@@ -119,7 +120,8 @@ export const processMovieSearchResultsForSelection = (data, searchTerm) => {
   return {
     hasMultipleMatches: false,
     movieTitle: `${movie.title} (${movie.release_date ? movie.release_date.slice(0, 4) : 'Unknown'})`,
-    posterPath: movie.poster_path
+    posterPath: movie.poster_path,
+    id: movie.id
   };
 };
 

@@ -136,6 +136,23 @@ app.post('/images', function (req, res) {
     .catch(() => console.log(`There was an error getting images for ${searchedActor}`))
 })
 
+// get cast by movie ID (server-side to avoid CORS and exposing API key)
+app.post('/getCastById', function (req, res) {
+  const { movieId } = req.body;
+  if (!movieId) {
+    res.status(400).send({ error: 'movieId is required' });
+    return;
+  }
+  axios.get(`https://api.themoviedb.org/3/movie/${movieId}/credits?api_key=${API.tmdbAPI}`)
+    .then((data) => {
+      res.status(200).send(data.data);
+    })
+    .catch((err) => {
+      console.log('There was an error getting the cast data by ID', err && err.message);
+      res.status(500).send({ error: 'Failed to fetch cast by ID' });
+    });
+});
+
 app.listen(4000, function() {
   console.log('listening on port 4000!');
 });

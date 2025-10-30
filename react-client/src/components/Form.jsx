@@ -8,6 +8,7 @@ const Input = styled.div`
   grid-column-end: 3;
   text-align: center;
   z-index: 2000;
+  margin-bottom: 8px;
 `
 
 const Submit = styled.input`
@@ -58,6 +59,12 @@ const SubmissionBox = styled.input`
   box-shadow: 0px 4px 20px 0px transparent;
   transition: 0.3s background-color ease-in-out, 0.3s box-shadow ease-in-out, 0.1s padding ease-in-out;
   -webkit-appearance: none;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 8px;
+  }
 `
 
 const Instructions = styled.p`

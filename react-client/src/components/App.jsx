@@ -286,9 +286,16 @@ class App extends React.Component {
             // Single match - process normally
             const result = {
               movieTitle: selectionResult.movieTitle,
-              posterPath: selectionResult.posterPath
+              posterPath: selectionResult.posterPath,
+              id: selectionResult.id
             };
             this.processMovieResult(result);
+            // Fetch cast immediately for first movie so actor guesses work
+            if (result.id) {
+              this.getCastById(result.id);
+            } else {
+              this.getCast(result.movieTitle);
+            }
             return;
           }
         }
@@ -301,6 +308,7 @@ class App extends React.Component {
         }
 
         this.processMovieResult(result);
+        // For subsequent movies, we already fetched cast elsewhere
       })
       .catch(() => {
         console.log('There was an error getting a movie title');

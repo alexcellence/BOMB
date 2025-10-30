@@ -11,6 +11,8 @@ const MovieStream = styled.ul`
   margin-right: auto;
   padding-top: 30px;
   z-index: 2000;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 `
 
 const Stream = (props) => (
