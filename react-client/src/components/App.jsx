@@ -7,7 +7,7 @@ import styles from './app.scss';
 
 // Imports from new modular files
 import { Container, Title, Streak, DefuseButton, ActorPhoto, MoviePoster } from './AppStyles.jsx';
-import { searchTitle, getCast, getFilmography, getActorImage } from '../services/apiService.js';
+import { searchTitle, getCast, getFilmography, getActorImage, getCastById } from '../services/apiService.js';
 import { processMovieSearchResults, processMovieSearchResultsForSelection, isUniqueMovie, validateMovieInFilmography } from '../utils/movieUtils.js';
 import { normalizeActorName, processFilmographyResults, findMatchingMovieInFilmography } from '../utils/actorUtils.js';
 
@@ -113,14 +113,15 @@ class App extends React.Component {
       } else {
         // First movie search - submit a get request with the movie search
         this.getTitle(this.state.searchTerm);
-        this.getCast(this.state.searchTerm);
+        // Don't get cast yet - wait for movie selection from dropdown
       }
     } else {
       // Actor turn
       let scores = [...this.state.totalScores];
       const options = {
         includeScore: true,
-        threshold: 0.43
+        threshold: 0.6,  // Increased threshold to allow partial matches (was 0.43)
+        findAllMatches: true  // Find all matches, not just the best
       };
       let fuse = new Fuse(this.state.cast, options);
       let searchedActor = normalizeActorName(this.state.searchTerm);
@@ -128,16 +129,48 @@ class App extends React.Component {
       console.log('This is the actor that was searched for ', searchedActor);
       let actorResults = fuse.search(searchedActor);
       console.log('actor results ', actorResults);
+
+      // Sort by score (lower is better) and also check for first/last name matches
       let sortedActorResults = actorResults.sort((a, b) => {
-        return a.refIndex - b.refIndex;
+        // Perfect match (score 0) comes first
+        if (a.score === 0 && b.score !== 0) return -1;
+        if (b.score === 0 && a.score !== 0) return 1;
+        // Otherwise sort by score
+        return a.score - b.score;
       });
       console.log('sortedActorResults ', sortedActorResults);
 
-      let actorIndex = 0;
+      // Check if search term matches a first or last name in the cast
+      let actorIndex = -1;
+      const searchLower = searchedActor.toLowerCase();
+
+      // First check for exact matches (score = 0)
       for (let i = 0; i < sortedActorResults.length; i++) {
         if (sortedActorResults[i].score === 0) {
           actorIndex = i;
+          console.log('Found exact match at index', i);
+          break;
         }
+      }
+
+      // If no exact match, check if search term matches any last name
+      if (actorIndex === -1) {
+        for (let i = 0; i < sortedActorResults.length; i++) {
+          const actorName = sortedActorResults[i].item.toLowerCase();
+          const nameParts = actorName.split(' ');
+          // Check if search term exactly matches any name part (first or last name)
+          if (nameParts.some(part => part === searchLower)) {
+            actorIndex = i;
+            console.log('Found exact name match at index', i, 'for actor', sortedActorResults[i].item);
+            break;
+          }
+        }
+      }
+
+      // If still no match, fall back to best fuzzy match (index 0)
+      if (actorIndex === -1) {
+        actorIndex = 0;
+        console.log('Using best fuzzy match (index 0)');
       }
 
       if (actorResults.length > 0) {
@@ -219,6 +252,9 @@ class App extends React.Component {
       showMovieSelector: false,
       movieOptions: []
     });
+
+    // Get cast for the selected movie using the movie ID for accuracy
+    this.getCastById(selectedMovie.id);
   }
 
   getTitle(searchTerm) {
@@ -306,7 +342,10 @@ class App extends React.Component {
       return;
     }
 
-    getCast(searchTerm)
+    // Remove year suffix for better matching (e.g., "Movie Title (2023)" -> "Movie Title")
+    const titleWithoutYear = searchTerm.replace(/\s*\(\d{4}\)\s*$/, '');
+
+    getCast(titleWithoutYear)
       .then((data) => {
         const cast = data.data.map(person => person.name);
         console.log(`${this.state.officialTitle}'s cast `, cast)
@@ -315,6 +354,23 @@ class App extends React.Component {
         })
       })
       .catch(() => console.log('There was an error getting the cast data'))
+  }
+
+  getCastById(movieId) {
+    if (movieId === undefined) {
+      return;
+    }
+
+    // Call the API with movie ID directly for accurate cast retrieval
+    getCastById(movieId)
+      .then((data) => {
+        const cast = data.data.cast.map(person => person.name);
+        console.log(`${this.state.officialTitle}'s cast (by ID) `, cast)
+        this.setState({
+          cast: cast
+        })
+      })
+      .catch(() => console.log('There was an error getting the cast data by ID'))
   }
 
   getFilmography(actor) {

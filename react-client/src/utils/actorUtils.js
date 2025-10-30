@@ -3,6 +3,11 @@ export const normalizeActorName = (actorName) => {
   if (actorName === 'the rock' || actorName === 'rock') {
     return 'Dwayne Johnson';
   }
+  // Normalize common abbreviations
+  const lowerName = actorName.toLowerCase();
+  if (lowerName === 'rdj' || lowerName === 'robert downey') {
+    return 'Robert Downey Jr.';
+  }
   return actorName;
 };
 
@@ -57,17 +62,21 @@ export const findMatchingMovieInFilmography = (searchTerm, filmographyResults, e
   console.log('movieFuse results with only titles ', movieTitles);
 
   // Filter out movies that were already used
+  // IMPORTANT: Track which indices we're removing so we don't mess up the matching
+  const filteredIndices = [];
   for (var i = 0; i < existingMovies.length; i++) {
     for (var j = 0; j < movieTitles.length; j++) {
       var currentMovie = existingMovies[i];
       console.log('currentMovie without year ', currentMovie.slice(0, currentMovie.length - 7));
       if (currentMovie.slice(0, currentMovie.length - 7) === movieTitles[j]) {
-        movieTitles.splice(j, 1);
+        // Mark this index for filtering
+        filteredIndices.push(j);
       }
     }
   }
   console.log('movieTitles without previous results ', movieTitles);
 
+  // Create processed titles for matching
   let movieResultsTitles = movieTitles.map(movie => movie.toLowerCase());
   console.log('Lowercase movie titles ', movieResultsTitles);
 
@@ -124,8 +133,9 @@ export const findMatchingMovieInFilmography = (searchTerm, filmographyResults, e
   }
 
   // Find the full movie object for the selected movie
+  // Map movieIndex back to the original sortedMovieResults index
   let selectedMovie = null;
-  if (movieTitles.length > 0) {
+  if (movieTitles.length > 0 && movieIndex >= 0) {
     const selectedMovieTitle = movieTitles[movieIndex];
     selectedMovie = filmographyResults.find(movie => movie.title === selectedMovieTitle);
   }

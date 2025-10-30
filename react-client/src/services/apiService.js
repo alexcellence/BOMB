@@ -15,3 +15,7 @@ export const getFilmography = (actor) => {
 export const getActorImage = (actor) => {
   return axios.post('/images', { data: actor });
 };
+
+export const getCastById = (movieId) => {
+  return axios.get(`https://api.themoviedb.org/3/movie/${movieId}/credits?api_key=${require('../../../config.js').tmdbAPI}`);
+};
